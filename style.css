@@ -1,4 +1,4 @@
-/* Paleta Oscura */
+/* Paleta Oscura y Seria */
 :root {
     --bg: #070b14;
     --card: #111827;
@@ -10,58 +10,81 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; }
+body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden;}
 
 /* Navegación */
 .barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
 .btn-nav { background: transparent; border: none; color: var(--muted); font-size: 15px; font-weight: 500; cursor: pointer; padding-bottom: 5px; transition: color 0.3s ease;}
 .btn-nav.activo { color: var(--text); border-bottom: 2px solid #3b82f6; font-weight: 600; }
 
-.pestana { display: none; padding: 0 15px; animation: fade 0.3s ease;}
+.pestana { display: none; padding: 0 15px; animation: fadeIn 0.2s ease-in; }
 .pestana.activa { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes fade { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+/* Animación de entrada para la pantalla de detalle */
+#pantalla-detalle {
+    animation: slideInRight 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
 
-/* Cabeceras y Logos Serios (Pequeños) */
+/* Cabeceras */
 .header-seccion { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .titulo-seccion { font-size: 24px; font-weight: 700; letter-spacing: -0.5px;}
-
-/* Estilo para imágenes y SVGs por igual */
-.logo-seccion { width: 26px; height: 26px; border-radius: 4px; object-fit: contain; background: white; padding: 2px;}
-.logo-seccion-svg { width: 26px; height: 26px; color: #60a5fa; } /* Color azul sutil para los iconos vectoriales */
-
+.logo-seccion-svg { width: 30px; height: 30px; color: #60a5fa; } 
 .header-detalle { background: var(--card); padding: 18px 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);}
 .btn-atras { background: transparent; border: none; color: #3b82f6; font-size: 16px; font-weight: 600; cursor: pointer; }
 
 /* Listas */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
-
 .item-lista { background: var(--card); padding: 18px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2);}
-.item-lista span { font-size: 17px; font-weight: 500; }
+.item-lista span { font-size: 17px; font-weight: 500; transition: color 0.2s;}
+
 input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; }
 
-/* Mensaje Vacio Principal y Detalle */
+/* Lógica de Modo Edición / Eliminar */
+.lista-estricta .casilla-seleccion { display: none; }
+.lista-estricta.modo-eliminar .casilla-seleccion { display: inline-block; animation: popIn 0.2s ease; }
+.lista-estricta.modo-eliminar .item-lista { border: 1px solid var(--red-dark); }
+@keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
 .vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px; }
 .vacio-msg { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; margin-top: 20px;}
 
 .bloque-detalle { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-.bloque-detalle h4 { margin-bottom: 10px; font-size: 16px; color: #60a5fa; }
+.bloque-detalle h4 { margin-bottom: 5px; font-size: 17px; color: #60a5fa; }
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
-.texto-detalle { font-size: 16px; line-height: 1.6; margin-top: 2px; }
+.texto-detalle { font-size: 15px; line-height: 1.6; color: #d1d5db; margin-top: 2px;}
+
+/* Tarjetas (Pasajes) */
+.tarjeta-transporte { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); position: relative; }
+.tarjeta-header { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
+.linea-roja { display: inline-block; width: 30px; height: 4px; background: #ef4444; border-radius: 2px;}
+.linea-verde { display: inline-block; width: 30px; height: 4px; background: #10b981; border-radius: 2px;}
+.tarjeta-saldo { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
+.btn-texto-azul { background: transparent; border: none; color: #3b82f6; font-size: 15px; font-weight: 600; margin-bottom: 20px; cursor: pointer;}
+.btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;}
 
 /* Botones Cuadrados Flotantes */
 .controles-flotantes { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
 .btn-cuadrado { width: 55px; height: 55px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 24px; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; color: white;}
-
 .azul { background-color: var(--blue-dark); }
 .rojo { background-color: var(--red-dark); }
 
-/* Caja de Texto Modal */
+/* Barra Confirmar Eliminación Abajo */
+.controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; animation: slideUp 0.3s ease; }
+.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text); }
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Modal y Caja de Texto */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
 .modal-caja { background: var(--card); width: 90%; max-width: 400px; padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
 .modal-caja h3 { margin-bottom: 15px; color: white; }
-.modal-caja textarea { width: 100%; background: var(--bg); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 16px; resize: none; margin-bottom: 15px; outline: none; }
+.input-moderno { width: 100%; background: var(--bg); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 12px; font-size: 15px; margin-bottom: 15px; outline: none; }
+textarea.input-moderno { resize: none; }
 .botones-modal { display: flex; justify-content: flex-end; gap: 10px; }
 .botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 .btn-modal-cancelar { background: transparent; color: var(--muted); border: 1px solid var(--muted); }

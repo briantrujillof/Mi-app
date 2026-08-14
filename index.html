@@ -18,56 +18,81 @@
         <button class="btn-nav" onclick="cambiarPestana('tarjetas')">Tarjetas</button>
     </nav>
 
-    <!-- PANTALLA PRINCIPAL CON SWIPE -->
     <main id="pantalla-principal">
         
+        <!-- UNIVERSIDAD -->
         <section id="universidad" class="pestana activa">
             <div class="header-seccion">
-                <img src="pucp-logo.png" alt="PUCP" class="logo-seccion" onerror="this.style.display='none'">
+                <svg class="logo-seccion-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                 <h1 class="titulo-seccion">Universidad</h1>
             </div>
-            <div id="lista-cursos-universidad" class="contenedor-lista"></div>
-            <div class="controles-flotantes">
+            <!-- Clase lista-estricta para ocultar checkboxes -->
+            <div id="lista-cursos-universidad" class="contenedor-lista lista-estricta"></div>
+            
+            <div class="controles-flotantes" id="flotantes-universidad">
                 <button class="btn-cuadrado azul" onclick="agregarCurso()">+</button>
-                <button class="btn-cuadrado rojo" onclick="borrarSeleccionados('lista-cursos-universidad')">-</button>
+                <button class="btn-cuadrado rojo" onclick="activarModoEliminar('universidad', 'lista-cursos-universidad')">-</button>
+            </div>
+            <!-- Botones Confirmar Eliminación (Ocultos) -->
+            <div class="controles-confirmar" id="confirmar-universidad" style="display: none;">
+                <button class="boton-largo transparente" onclick="cancelarModoEliminar('universidad', 'lista-cursos-universidad')">Cancelar</button>
+                <button class="boton-largo rojo" onclick="confirmarEliminacion('universidad', 'lista-cursos-universidad')">Eliminar Cursos</button>
             </div>
         </section>
 
+        <!-- INGLÉS -->
         <section id="ingles" class="pestana">
             <div class="header-seccion">
-                <img src="britanico-logo.png" alt="Inglés" class="logo-seccion" onerror="this.style.display='none'">
+                <svg class="logo-seccion-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                 <h1 class="titulo-seccion">Británico</h1>
             </div>
-            <div id="lista-ciclos-ingles" class="contenedor-lista"></div>
-            <div class="controles-flotantes">
+            <!-- Clase lista-estricta para ocultar checkboxes -->
+            <div id="lista-ciclos-ingles" class="contenedor-lista lista-estricta"></div>
+            
+            <div class="controles-flotantes" id="flotantes-ingles">
                 <button class="btn-cuadrado azul" onclick="agregarCiclo()">+</button>
-                <button class="btn-cuadrado rojo" onclick="borrarSeleccionados('lista-ciclos-ingles')">-</button>
+                <button class="btn-cuadrado rojo" onclick="activarModoEliminar('ingles', 'lista-ciclos-ingles')">-</button>
+            </div>
+            <!-- Botones Confirmar Eliminación (Ocultos) -->
+            <div class="controles-confirmar" id="confirmar-ingles" style="display: none;">
+                <button class="boton-largo transparente" onclick="cancelarModoEliminar('ingles', 'lista-ciclos-ingles')">Cancelar</button>
+                <button class="boton-largo rojo" onclick="confirmarEliminacion('ingles', 'lista-ciclos-ingles')">Eliminar Ciclos</button>
             </div>
         </section>
 
+        <!-- PENDIENTES (Sin modo estricto, funciona normal) -->
         <section id="pendientes" class="pestana">
             <div class="header-seccion">
-                <!-- Icono SVG serio para tareas -->
                 <svg class="logo-seccion-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                 <h1 class="titulo-seccion">Pendientes</h1>
             </div>
             <div id="lista-pendientes" class="contenedor-lista"></div>
-            <div class="controles-flotantes">
+            <div class="controles-flotantes" id="flotantes-pendientes">
                 <button class="btn-cuadrado azul" onclick="agregarPendiente()">+</button>
-                <button class="btn-cuadrado rojo" onclick="borrarSeleccionados('lista-pendientes')">-</button>
+                <button class="btn-cuadrado rojo" onclick="borrarSeleccionadosPendientes()">-</button>
             </div>
         </section>
 
+        <!-- TARJETAS -->
         <section id="tarjetas" class="pestana">
             <div class="header-seccion">
-                <!-- Icono SVG serio para tarjetas -->
                 <svg class="logo-seccion-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                <h1 class="titulo-seccion">Tarjetas</h1>
+                <h1 class="titulo-seccion">Mis Pasajes</h1>
             </div>
-            <div id="lista-tarjetas" class="contenedor-lista"></div>
-            <div class="controles-flotantes">
-                <button class="btn-cuadrado azul" onclick="agregarTarjeta()">+</button>
-                <button class="btn-cuadrado rojo" onclick="borrarSeleccionados('lista-tarjetas')">-</button>
+            <div class="contenedor-lista">
+                <!-- Diseño de pasajes -->
+                <div class="tarjeta-transporte">
+                    <div class="tarjeta-header"><span class="linea-roja"></span> Corredor</div>
+                    <div class="tarjeta-saldo">S/ <span id="saldo-corredor">10.00</span></div>
+                    <button class="btn-texto-azul" onclick="agregarSaldo('corredor')">+ Agregar Saldo</button>
+                    <button class="btn-viaje" onclick="descontarPasaje('corredor', 2.20)">🚌 Confirmar Viaje</button>
+                </div>
+                <div class="tarjeta-transporte">
+                    <div class="tarjeta-header"><span class="linea-verde"></span> Tren Eléctrico</div>
+                    <div class="tarjeta-saldo">S/ <span id="saldo-tren">5.00</span></div>
+                    <button class="btn-texto-azul" onclick="agregarSaldo('tren')">+ Agregar Saldo</button>
+                    <button class="btn-viaje" onclick="descontarPasaje('tren', 1.50)">🚆 Confirmar Viaje</button>
+                </div>
             </div>
         </section>
     </main>
@@ -78,9 +103,7 @@
             <button class="btn-atras" onclick="cerrarDetalle()">← Atrás</button>
             <h2 id="titulo-detalle"></h2>
         </div>
-        
         <div id="contenido-detalle" class="contenedor-lista-detalle"></div>
-        
         <div class="controles-flotantes">
             <button class="btn-cuadrado azul" onclick="abrirModalTexto()">T</button>
             <button class="btn-cuadrado azul" onclick="prepararImagen()">🖼️</button>
@@ -89,11 +112,12 @@
         <input type="file" id="input-imagen" accept="image/*" style="display: none;" onchange="cargarImagen(event)">
     </main>
 
-    <!-- Modal Texto -->
+    <!-- MODAL CAJA DE TEXTO (Título y Contenido) -->
     <div id="modal-texto" class="modal-overlay" style="display:none;">
         <div class="modal-caja">
-            <h3>Agregar Texto</h3>
-            <textarea id="input-caja-texto" placeholder="Escribe tu apunte aquí..." rows="5"></textarea>
+            <h3>Agregar Apunte</h3>
+            <input type="text" id="input-caja-titulo" placeholder="Título (Ej: Tema 1)..." class="input-moderno">
+            <textarea id="input-caja-texto" placeholder="Escribe tu apunte aquí..." rows="4" class="input-moderno"></textarea>
             <div class="botones-modal">
                 <button class="btn-modal-cancelar" onclick="cerrarModalTexto()">Cancelar</button>
                 <button class="btn-modal-guardar" onclick="guardarTextoDeCaja()">Guardar</button>
@@ -101,7 +125,7 @@
         </div>
     </div>
 
-    <!-- Modal Recorte -->
+    <!-- MODAL RECORTE -->
     <div id="modal-recorte" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; flex-direction: column;">
         <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; overflow: hidden;">
             <img id="imagen-a-recortar" style="max-width: 100%; max-height: 100%;">
