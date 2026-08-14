@@ -1,6 +1,6 @@
 {
-  "name": "Mi App Estudiantil",
-  "short_name": "Mi App",
+  "name": "HELP",
+  "short_name": "HELP",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0b192c",
