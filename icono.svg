@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Fondo blanco cuadrado -->
+  <rect width="192" height="192" fill="#ffffff"/>
+  <!-- Letras BJ centradas en color negro -->
+  <text x="96" y="125" font-family="'Segoe UI', Arial, sans-serif" font-size="90" font-weight="bold" fill="#000000" text-anchor="middle">BJ</text>
+</svg>

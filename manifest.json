@@ -1,0 +1,15 @@
+{
+  "name": "Mi App Estudiantil",
+  "short_name": "Mi App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b192c",
+  "theme_color": "#0b192c",
+  "icons": [
+    {
+      "src": "icono.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
