@@ -44,7 +44,7 @@ function cambiarPestana(idPestana) {
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
 }
 
-// === VERIFICACIONES ===
+// === VERIFICACIONES Y MENSAJES VACÍOS ===
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -53,7 +53,7 @@ function verificarContenidoPrincipal() {
         let msg = lista.querySelector('.vacio-msg-principal');
         let itemsCount = lista.querySelectorAll('.item-lista').length;
         if (itemsCount === 0 && !msg) {
-            lista.innerHTML = '<div class="vacio-msg-principal anim-enter">Sin contenido por el momento. Usa el botón (+) para agregar.</div>';
+            lista.innerHTML = '<div class="vacio-msg-principal fade-in-up">Sin contenido por el momento. Usa el botón (+) para agregar.</div>';
         } else if (itemsCount > 0 && msg) msg.remove();
     });
 }
@@ -62,13 +62,13 @@ function verificarContenidoDetalle() {
     let contenedor = document.getElementById('contenido-detalle');
     let mensaje = contenedor.querySelector('.vacio-msg');
     if (contenedor.children.length === 0 && !mensaje) {
-        contenedor.innerHTML = '<div class="vacio-msg anim-enter">Apuntes vacíos. Usa los botones inferiores.</div>';
+        contenedor.innerHTML = '<div class="vacio-msg fade-in-up">Apuntes vacíos. Usa los botones inferiores.</div>';
     } else if (contenedor.children.length > 1 && mensaje) {
         mensaje.remove();
     }
 }
 
-// === ELIMINAR CURSOS/CICLOS CON ANIMACIÓN ===
+// === ELIMINAR CURSOS/CICLOS ===
 function activarModoEliminar(pestañaID, listaID) {
     document.getElementById(`flotantes-${pestañaID}`).style.display = 'none';
     document.getElementById(`confirmar-${pestañaID}`).style.display = 'flex';
@@ -86,11 +86,11 @@ function confirmarEliminacion(pestañaID, listaID) {
     let seleccionados = document.getElementById(listaID).querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length === 0) { cancelarModoEliminar(pestañaID, listaID); return; }
     
-    // Anima la salida antes de borrar
+    // Animación de salida antes de borrar
     seleccionados.forEach(c => {
         let item = c.closest('.item-lista');
-        item.classList.remove('anim-enter');
-        item.classList.add('anim-leave');
+        item.classList.remove('fade-in-up');
+        item.classList.add('fade-out');
         setTimeout(() => item.remove(), 290);
     });
     
@@ -106,15 +106,15 @@ function borrarSeleccionadosPendientes() {
     if (seleccionados.length > 0 && confirm("¿Eliminar los pendientes seleccionados?")) {
         seleccionados.forEach(c => {
             let item = c.closest('.item-lista');
-            item.classList.remove('anim-enter');
-            item.classList.add('anim-leave');
+            item.classList.remove('fade-in-up');
+            item.classList.add('fade-out');
             setTimeout(() => item.remove(), 290);
         });
         setTimeout(() => { guardarDatos(); verificarContenidoPrincipal(); }, 300);
     }
 }
 
-// === TRANSICIONES ENTRE PANTALLAS (MENU <-> CURSO) ===
+// === TRANSICIÓN DE NAVEGACIÓN (ENTRAR A CURSO) ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
@@ -122,16 +122,19 @@ function abrirDetalle(nombreItem) {
     itemActual = nombreItem;
     window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
     
+    // Preparar pantallas
     const main = document.getElementById('pantalla-principal');
     const nav = document.getElementById('nav-principal');
     const detalle = document.getElementById('pantalla-detalle');
 
+    // Desaparecer menú principal
     main.style.display = 'none';
     nav.style.display = 'none';
     
+    // Aparecer curso con animación
     detalle.style.display = 'block';
-    detalle.classList.add('view-enter');
-    setTimeout(() => detalle.classList.remove('view-enter'), 300);
+    detalle.classList.remove('slide-out');
+    detalle.classList.add('slide-in');
 
     document.getElementById('titulo-detalle').innerText = nombreItem;
     document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
@@ -146,17 +149,19 @@ window.addEventListener('popstate', function() {
         
         cancelarModoEliminarDetalle();
         
-        detalle.classList.add('view-leave');
+        // Animación de salida del curso
+        detalle.classList.remove('slide-in');
+        detalle.classList.add('slide-out');
+        
         setTimeout(() => {
             detalle.style.display = 'none';
-            detalle.classList.remove('view-leave');
-            
             nav.style.display = 'flex';
             main.style.display = 'block';
             
-            // Animación de entrada al volver
-            main.classList.add('fade-in-basic');
-            setTimeout(() => main.classList.remove('fade-in-basic'), 200);
+            // Animación de entrada al volver al menú principal
+            main.classList.remove('fade-out');
+            main.classList.add('fade-in-up');
+            setTimeout(() => main.classList.remove('fade-in-up'), 300);
 
             document.getElementById('modal-recorte').style.display = 'none';
             document.getElementById('modal-texto').style.display = 'none';
@@ -175,7 +180,7 @@ function agregarItemLista(idLista, nombre) {
     if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
 
     let li = document.createElement('div');
-    li.className = 'item-lista anim-enter';
+    li.className = 'item-lista fade-in-up'; // Entra con animación
     
     if (idLista === 'lista-pendientes') {
         li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span style="flex-grow:1;">${nombre}</span>`;
@@ -198,7 +203,7 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === TARJETAS DE PASAJES (MONTOS EXACTOS) ===
+// === TARJETAS DE PASAJES ===
 function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
@@ -241,10 +246,11 @@ function confirmarEliminacionDetalle() {
     let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
     if (seleccionados.length === 0) { cancelarModoEliminarDetalle(); return; }
     
+    // Anima el borrado de apuntes
     seleccionados.forEach(c => {
         let bloque = c.closest('.bloque-detalle');
-        bloque.classList.remove('anim-enter');
-        bloque.classList.add('anim-leave');
+        bloque.classList.remove('fade-in-up');
+        bloque.classList.add('fade-out');
         setTimeout(() => bloque.remove(), 290);
     });
     setTimeout(() => {
@@ -254,10 +260,7 @@ function confirmarEliminacionDetalle() {
 
 function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = ""; document.getElementById('input-caja-texto').value = "";
-    const modal = document.getElementById('modal-texto');
-    modal.style.display = 'flex';
-    modal.classList.add('fade-in-basic');
-    setTimeout(() => modal.classList.remove('fade-in-basic'), 200);
+    document.getElementById('modal-texto').style.display = 'flex';
 }
 function cerrarModalTexto() { document.getElementById('modal-texto').style.display = 'none'; }
 
@@ -268,7 +271,7 @@ function guardarTextoDeCaja() {
         let contenedor = document.getElementById('contenido-detalle');
         if(contenedor.querySelector('.vacio-msg')) contenedor.innerHTML = '';
         let div = document.createElement('div');
-        div.className = 'bloque-detalle anim-enter';
+        div.className = 'bloque-detalle fade-in-up'; // Entra con animación
         let textoFormateado = texto.replace(/\n/g, '<br>');
         
         div.innerHTML = `
@@ -294,10 +297,7 @@ function cargarImagen(event) {
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
-            const modal = document.getElementById('modal-recorte');
-            modal.style.display = 'flex';
-            modal.classList.add('fade-in-basic');
-            setTimeout(() => modal.classList.remove('fade-in-basic'), 200);
+            document.getElementById('modal-recorte').style.display = 'flex';
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
@@ -318,7 +318,7 @@ async function confirmarRecorte() {
         let urlImagen = await subirImagenACloudinary(canvas.toDataURL('image/jpeg', 0.7));
 
         let div = document.createElement('div');
-        div.className = 'bloque-detalle anim-enter';
+        div.className = 'bloque-detalle fade-in-up'; // Entra con animación
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
