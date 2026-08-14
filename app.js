@@ -124,7 +124,7 @@ function borrarSeleccionadosPendientes() {
     }
 }
 
-// === TRANSICIONES DE PANTALLA ===
+// === TRANSICIONES DE PANTALLA Y BOTONES FLOTANTES ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
@@ -139,7 +139,7 @@ function abrirDetalle(nombreItem) {
     main.style.display = 'none';
     nav.style.display = 'none';
     
-    // Ocultar botones principales, mostrar botones de detalle
+    // AQUÍ SE FUERZAN A MOSTRARSE LOS BOTONES T, IMAGEN Y MENOS
     document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
     document.getElementById('flotantes-detalle').style.display = 'flex';
 
