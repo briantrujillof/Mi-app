@@ -10,14 +10,25 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
+
+/* BLOQUEO DEL SCROLL HORIZONTAL (Solución definitiva al espacio en blanco) */
+html, body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    padding-bottom: 90px; 
+    overflow-x: hidden; 
+    width: 100vw; 
+    max-width: 100%; 
+    position: relative; 
+}
 
 /* === ANIMACIONES === */
-.pantalla { width: 100%; }
+.pantalla { width: 100%; min-height: 100vh;}
 .slide-in { animation: slideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .slide-out { animation: slideOut 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .fade-in-up { animation: fadeInUp 0.35s forwards ease-out; }
 .fade-out { animation: fadeOut 0.3s forwards ease-in; }
+.solo-fade-in { animation: soloFadeIn 0.2s forwards; }
 
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
@@ -71,12 +82,8 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s;}
 .btn-viaje:active { transform: scale(0.97); }
 
-/* === COLORES UNIVERSALES (CORRECCIÓN DE BOTÓN BLANCO) === */
-.azul { background-color: var(--blue-dark) !important; color: white !important; }
-.rojo { background-color: var(--red-dark) !important; color: white !important; }
-
-/* === BOTONES MINIMALISTAS (SVGs) === */
-.controles-flotantes { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
+/* === BOTONES MINIMALISTAS SVGs (Separados para siempre ser visibles) === */
+.controles-flotantes { position: fixed; bottom: 25px; right: 20px; flex-direction: column; gap: 12px; z-index: 999; }
 .btn-cuadrado { 
     width: 55px; height: 55px; border-radius: 12px; border: none; 
     display: flex; align-items: center; justify-content: center;
@@ -84,11 +91,12 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
     transition: transform 0.1s ease; 
 }
 .btn-cuadrado:active { transform: scale(0.9); }
-/* Tamaño perfecto para los iconos SVG dentro de los botones */
+.btn-cuadrado.azul { background-color: var(--blue-dark); color: white; }
+.btn-cuadrado.rojo { background-color: var(--red-dark); color: white; }
 .btn-cuadrado svg { width: 24px; height: 24px; color: white; }
 
 /* Controles Confirmar */
-.controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; animation: fadeInUp 0.3s forwards; }
+.controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; gap: 10px; z-index: 999; animation: fadeInUp 0.3s forwards; }
 
 /* Modales */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
@@ -99,6 +107,7 @@ textarea.input-moderno { resize: none; }
 .botones-modal { display: flex; justify-content: flex-end; gap: 10px; }
 .botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
 .btn-modal-cancelar { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
+.btn-modal-guardar { background: var(--blue-dark); color: white; }
 .footer-recorte { padding: 15px; background: #000; display: flex; justify-content: space-between; gap: 10px; width: 100%;}
-.boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer;}
-.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text) !important; }
+.boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
+.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text); }

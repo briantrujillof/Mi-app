@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarDatos();
     activarArrastrarYSoltar();
     cargarSaldosTarjetas();
+    actualizarControles(); // Asegurar visibilidad inicial
 
     document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
     document.addEventListener('touchend', e => {
@@ -42,20 +43,49 @@ function cambiarPestana(idPestana) {
     document.getElementById(idPestana).classList.add('activa');
     const botonesNav = document.querySelectorAll('.btn-nav');
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
-
-    // Manejar controles flotantes externos
-    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
+    
+    // Limpiar modos de eliminación al cambiar de pestaña
     document.querySelectorAll('.lista-estricta').forEach(el => {
         el.classList.remove('modo-eliminar');
         el.querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
     });
+    actualizarControles();
+}
 
-    if (document.getElementById(`flotantes-${idPestana}`)) {
-        document.getElementById(`flotantes-${idPestana}`).style.display = 'flex';
+// === CEREBRO MAESTRO DE BOTONES FLOTANTES ===
+// Esta función decide qué botones mostrar en la esquina sin importar las animaciones
+function actualizarControles() {
+    // 1. Ocultar todo
+    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
+    
+    // 2. Determinar en qué pantalla estamos
+    const enDetalle = document.getElementById('pantalla-detalle').style.display === 'block';
+    
+    if (enDetalle) {
+        // Estamos dentro de un apunte (Física 3, etc.)
+        if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
+            document.getElementById('confirmar-detalle').style.display = 'flex';
+        } else {
+            document.getElementById('flotantes-detalle').style.display = 'flex';
+        }
+    } else {
+        // Estamos en el menú principal (PUCP, Inglés, etc.)
+        const pestanaActual = vistas[vistaActualIndex];
+        let listaAsociada = '';
+        if (pestanaActual === 'universidad') listaAsociada = 'lista-cursos-universidad';
+        if (pestanaActual === 'ingles') listaAsociada = 'lista-ciclos-ingles';
+        
+        if (listaAsociada && document.getElementById(listaAsociada).classList.contains('modo-eliminar')) {
+            document.getElementById(`confirmar-${pestanaActual}`).style.display = 'flex';
+        } else {
+            if (document.getElementById(`flotantes-${pestanaActual}`)) {
+                document.getElementById(`flotantes-${pestanaActual}`).style.display = 'flex';
+            }
+        }
     }
 }
 
-// === VERIFICACIONES ===
+// === VERIFICACIONES Y MENSAJES VACÍOS ===
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -81,16 +111,14 @@ function verificarContenidoDetalle() {
 
 // === ELIMINAR CURSOS/CICLOS ===
 function activarModoEliminar(pestañaID, listaID) {
-    document.getElementById(`flotantes-${pestañaID}`).style.display = 'none';
-    document.getElementById(`confirmar-${pestañaID}`).style.display = 'flex';
     document.getElementById(listaID).classList.add('modo-eliminar');
+    actualizarControles();
 }
 
 function cancelarModoEliminar(pestañaID, listaID) {
-    document.getElementById(`flotantes-${pestañaID}`).style.display = 'flex';
-    document.getElementById(`confirmar-${pestañaID}`).style.display = 'none';
     document.getElementById(listaID).classList.remove('modo-eliminar');
     document.getElementById(listaID).querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
+    actualizarControles();
 }
 
 function confirmarEliminacion(pestañaID, listaID) {
@@ -124,7 +152,7 @@ function borrarSeleccionadosPendientes() {
     }
 }
 
-// === TRANSICIONES DE PANTALLA Y BOTONES FLOTANTES ===
+// === TRANSICIONES DE PANTALLA (Navegación al curso) ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
@@ -139,10 +167,6 @@ function abrirDetalle(nombreItem) {
     main.style.display = 'none';
     nav.style.display = 'none';
     
-    // AQUÍ SE FUERZAN A MOSTRARSE LOS BOTONES T, IMAGEN Y MENOS
-    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
-    document.getElementById('flotantes-detalle').style.display = 'flex';
-
     detalle.style.display = 'block';
     detalle.classList.remove('slide-out');
     detalle.classList.add('slide-in');
@@ -150,6 +174,8 @@ function abrirDetalle(nombreItem) {
     document.getElementById('titulo-detalle').innerText = nombreItem;
     document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
     verificarContenidoDetalle();
+    
+    actualizarControles(); // Enciende los botones T, 🖼️ y -
 }
 
 window.addEventListener('popstate', function() {
@@ -158,11 +184,16 @@ window.addEventListener('popstate', function() {
         const nav = document.getElementById('nav-principal');
         const detalle = document.getElementById('pantalla-detalle');
         
-        cancelarModoEliminarDetalle();
+        // Desactiva modo eliminar si estaba activo al darle atrás
+        if(document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
+            document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
+            document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
+        }
         
         detalle.classList.remove('slide-in');
         detalle.classList.add('slide-out');
         
+        // Forzar a ocultar los botones de detalle de inmediato
         document.getElementById('flotantes-detalle').style.display = 'none';
         document.getElementById('confirmar-detalle').style.display = 'none';
         
@@ -171,16 +202,14 @@ window.addEventListener('popstate', function() {
             nav.style.display = 'flex';
             main.style.display = 'block';
             
-            if (document.getElementById(`flotantes-${vistas[vistaActualIndex]}`)) {
-                document.getElementById(`flotantes-${vistas[vistaActualIndex]}`).style.display = 'flex';
-            }
-            
             main.classList.add('fade-in-up');
             setTimeout(() => main.classList.remove('fade-in-up'), 300);
 
             document.getElementById('modal-recorte').style.display = 'none';
             document.getElementById('modal-texto').style.display = 'none';
             if(cropper) { cropper.destroy(); cropper = null; }
+            
+            actualizarControles(); // Retorna los botones + y - de la pantalla principal
         }, 290);
     }
 });
@@ -218,7 +247,7 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === TARJETAS ===
+// === TARJETAS DE PASAJES ===
 function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
@@ -247,15 +276,13 @@ function descontarPasaje(tipo, costo) {
 
 // === MODO ELIMINAR DETALLE ===
 function activarModoEliminarDetalle() {
-    document.getElementById('flotantes-detalle').style.display = 'none';
-    document.getElementById('confirmar-detalle').style.display = 'flex';
     document.getElementById('contenido-detalle').classList.add('modo-eliminar');
+    actualizarControles();
 }
 function cancelarModoEliminarDetalle() {
-    document.getElementById('flotantes-detalle').style.display = 'flex';
-    document.getElementById('confirmar-detalle').style.display = 'none';
     document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
     document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
+    actualizarControles();
 }
 function confirmarEliminacionDetalle() {
     let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
@@ -277,7 +304,8 @@ function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = ""; document.getElementById('input-caja-texto').value = "";
     const modal = document.getElementById('modal-texto');
     modal.style.display = 'flex';
-    modal.style.animation = 'soloFadeIn 0.2s';
+    modal.classList.add('solo-fade-in');
+    setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
 }
 function cerrarModalTexto() { document.getElementById('modal-texto').style.display = 'none'; }
 
@@ -316,7 +344,8 @@ function cargarImagen(event) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
             const modal = document.getElementById('modal-recorte');
             modal.style.display = 'flex';
-            modal.style.animation = 'soloFadeIn 0.2s';
+            modal.classList.add('solo-fade-in');
+            setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
