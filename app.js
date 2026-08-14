@@ -5,7 +5,6 @@ let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
 
-// === LÓGICA DE SWIPE ===
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
@@ -14,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarDatos();
     activarArrastrarYSoltar();
     cargarSaldosTarjetas();
-    actualizarControles(); // Asegurar visibilidad inicial
+    actualizarControles(); 
 
     document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
     document.addEventListener('touchend', e => {
@@ -44,7 +43,6 @@ function cambiarPestana(idPestana) {
     const botonesNav = document.querySelectorAll('.btn-nav');
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
     
-    // Limpiar modos de eliminación al cambiar de pestaña
     document.querySelectorAll('.lista-estricta').forEach(el => {
         el.classList.remove('modo-eliminar');
         el.querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
@@ -52,24 +50,17 @@ function cambiarPestana(idPestana) {
     actualizarControles();
 }
 
-// === CEREBRO MAESTRO DE BOTONES FLOTANTES ===
-// Esta función decide qué botones mostrar en la esquina sin importar las animaciones
 function actualizarControles() {
-    // 1. Ocultar todo
     document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
-    
-    // 2. Determinar en qué pantalla estamos
     const enDetalle = document.getElementById('pantalla-detalle').style.display === 'block';
     
     if (enDetalle) {
-        // Estamos dentro de un apunte (Física 3, etc.)
         if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
             document.getElementById('confirmar-detalle').style.display = 'flex';
         } else {
             document.getElementById('flotantes-detalle').style.display = 'flex';
         }
     } else {
-        // Estamos en el menú principal (PUCP, Inglés, etc.)
         const pestanaActual = vistas[vistaActualIndex];
         let listaAsociada = '';
         if (pestanaActual === 'universidad') listaAsociada = 'lista-cursos-universidad';
@@ -85,7 +76,6 @@ function actualizarControles() {
     }
 }
 
-// === VERIFICACIONES Y MENSAJES VACÍOS ===
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -109,7 +99,6 @@ function verificarContenidoDetalle() {
     }
 }
 
-// === ELIMINAR CURSOS/CICLOS ===
 function activarModoEliminar(pestañaID, listaID) {
     document.getElementById(listaID).classList.add('modo-eliminar');
     actualizarControles();
@@ -152,7 +141,6 @@ function borrarSeleccionadosPendientes() {
     }
 }
 
-// === TRANSICIONES DE PANTALLA (Navegación al curso) ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
@@ -174,8 +162,7 @@ function abrirDetalle(nombreItem) {
     document.getElementById('titulo-detalle').innerText = nombreItem;
     document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
     verificarContenidoDetalle();
-    
-    actualizarControles(); // Enciende los botones T, 🖼️ y -
+    actualizarControles(); 
 }
 
 window.addEventListener('popstate', function() {
@@ -184,7 +171,6 @@ window.addEventListener('popstate', function() {
         const nav = document.getElementById('nav-principal');
         const detalle = document.getElementById('pantalla-detalle');
         
-        // Desactiva modo eliminar si estaba activo al darle atrás
         if(document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
             document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
             document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
@@ -193,7 +179,6 @@ window.addEventListener('popstate', function() {
         detalle.classList.remove('slide-in');
         detalle.classList.add('slide-out');
         
-        // Forzar a ocultar los botones de detalle de inmediato
         document.getElementById('flotantes-detalle').style.display = 'none';
         document.getElementById('confirmar-detalle').style.display = 'none';
         
@@ -209,12 +194,11 @@ window.addEventListener('popstate', function() {
             document.getElementById('modal-texto').style.display = 'none';
             if(cropper) { cropper.destroy(); cropper = null; }
             
-            actualizarControles(); // Retorna los botones + y - de la pantalla principal
+            actualizarControles(); 
         }, 290);
     }
 });
 
-// === AGREGAR ITEMS ===
 function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemLista('lista-cursos-universidad', n); guardarDatos(); } }
 function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemLista('lista-ciclos-ingles', n); guardarDatos(); } }
 function agregarPendiente() { let n = prompt("Nuevo pendiente:"); if (n) { agregarItemLista('lista-pendientes', n); guardarDatos(); } }
@@ -247,7 +231,6 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === TARJETAS DE PASAJES ===
 function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
@@ -274,7 +257,6 @@ function descontarPasaje(tipo, costo) {
     } else { alert("Saldo insuficiente."); }
 }
 
-// === MODO ELIMINAR DETALLE ===
 function activarModoEliminarDetalle() {
     document.getElementById('contenido-detalle').classList.add('modo-eliminar');
     actualizarControles();
@@ -299,7 +281,6 @@ function confirmarEliminacionDetalle() {
     }, 300);
 }
 
-// === MODAL TEXTO ===
 function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = ""; document.getElementById('input-caja-texto').value = "";
     const modal = document.getElementById('modal-texto');
@@ -334,7 +315,6 @@ function guardarTextoDeCaja() {
 }
 function guardarContenidoDetalle() { localStorage.setItem('contenido_' + itemActual, document.getElementById('contenido-detalle').innerHTML); }
 
-// === IMÁGENES CLOUDINARY ===
 function prepararImagen() { tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; document.getElementById('input-imagen').click(); }
 function cargarImagen(event) {
     let file = event.target.files[0];
@@ -389,10 +369,31 @@ async function subirImagenACloudinary(dataUrl) {
     return data.secure_url;
 }
 
+// === ARRASTRAR Y SOLTAR ORIGINAL CON FALLBACK TOLERANCE ===
 function activarArrastrarYSoltar() {
-    const opc = { animation: 150, delay: 250, delayOnTouchOnly: true, filter: 'input, button', preventOnFilter: false, onEnd: function() { guardarDatos(); } };
+    const opc = { 
+        animation: 150, 
+        delay: 200, 
+        delayOnTouchOnly: true, 
+        fallbackTolerance: 5, // Vital para celulares
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        filter: 'input, button', 
+        preventOnFilter: false, 
+        onEnd: function() { guardarDatos(); } 
+    };
     new Sortable(document.getElementById('lista-cursos-universidad'), opc);
     new Sortable(document.getElementById('lista-ciclos-ingles'), opc);
     new Sortable(document.getElementById('lista-pendientes'), opc);
-    new Sortable(document.getElementById('contenido-detalle'), { animation: 150, delay: 250, delayOnTouchOnly: true, filter: 'input', preventOnFilter: false, onEnd: function() { guardarContenidoDetalle(); } });
+    new Sortable(document.getElementById('contenido-detalle'), { 
+        animation: 150, 
+        delay: 200, 
+        delayOnTouchOnly: true, 
+        fallbackTolerance: 5,
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        filter: 'input', 
+        preventOnFilter: false, 
+        onEnd: function() { guardarContenidoDetalle(); } 
+    });
 }
