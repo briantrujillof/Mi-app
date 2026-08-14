@@ -42,9 +42,20 @@ function cambiarPestana(idPestana) {
     document.getElementById(idPestana).classList.add('activa');
     const botonesNav = document.querySelectorAll('.btn-nav');
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
+
+    // Manejar controles flotantes externos
+    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.lista-estricta').forEach(el => {
+        el.classList.remove('modo-eliminar');
+        el.querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
+    });
+
+    if (document.getElementById(`flotantes-${idPestana}`)) {
+        document.getElementById(`flotantes-${idPestana}`).style.display = 'flex';
+    }
 }
 
-// === VERIFICACIONES Y MENSAJES VACÍOS ===
+// === VERIFICACIONES ===
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -86,7 +97,6 @@ function confirmarEliminacion(pestañaID, listaID) {
     let seleccionados = document.getElementById(listaID).querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length === 0) { cancelarModoEliminar(pestañaID, listaID); return; }
     
-    // Animación de salida antes de borrar
     seleccionados.forEach(c => {
         let item = c.closest('.item-lista');
         item.classList.remove('fade-in-up');
@@ -114,7 +124,7 @@ function borrarSeleccionadosPendientes() {
     }
 }
 
-// === TRANSICIÓN DE NAVEGACIÓN (ENTRAR A CURSO) ===
+// === TRANSICIONES DE PANTALLA ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
@@ -122,16 +132,17 @@ function abrirDetalle(nombreItem) {
     itemActual = nombreItem;
     window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
     
-    // Preparar pantallas
     const main = document.getElementById('pantalla-principal');
     const nav = document.getElementById('nav-principal');
     const detalle = document.getElementById('pantalla-detalle');
 
-    // Desaparecer menú principal
     main.style.display = 'none';
     nav.style.display = 'none';
     
-    // Aparecer curso con animación
+    // Ocultar botones principales, mostrar botones de detalle
+    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
+    document.getElementById('flotantes-detalle').style.display = 'flex';
+
     detalle.style.display = 'block';
     detalle.classList.remove('slide-out');
     detalle.classList.add('slide-in');
@@ -149,17 +160,21 @@ window.addEventListener('popstate', function() {
         
         cancelarModoEliminarDetalle();
         
-        // Animación de salida del curso
         detalle.classList.remove('slide-in');
         detalle.classList.add('slide-out');
+        
+        document.getElementById('flotantes-detalle').style.display = 'none';
+        document.getElementById('confirmar-detalle').style.display = 'none';
         
         setTimeout(() => {
             detalle.style.display = 'none';
             nav.style.display = 'flex';
             main.style.display = 'block';
             
-            // Animación de entrada al volver al menú principal
-            main.classList.remove('fade-out');
+            if (document.getElementById(`flotantes-${vistas[vistaActualIndex]}`)) {
+                document.getElementById(`flotantes-${vistas[vistaActualIndex]}`).style.display = 'flex';
+            }
+            
             main.classList.add('fade-in-up');
             setTimeout(() => main.classList.remove('fade-in-up'), 300);
 
@@ -180,7 +195,7 @@ function agregarItemLista(idLista, nombre) {
     if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
 
     let li = document.createElement('div');
-    li.className = 'item-lista fade-in-up'; // Entra con animación
+    li.className = 'item-lista fade-in-up'; 
     
     if (idLista === 'lista-pendientes') {
         li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span style="flex-grow:1;">${nombre}</span>`;
@@ -203,7 +218,7 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === TARJETAS DE PASAJES ===
+// === TARJETAS ===
 function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
@@ -230,7 +245,7 @@ function descontarPasaje(tipo, costo) {
     } else { alert("Saldo insuficiente."); }
 }
 
-// === MODO ELIMINAR Y APUNTES ===
+// === MODO ELIMINAR DETALLE ===
 function activarModoEliminarDetalle() {
     document.getElementById('flotantes-detalle').style.display = 'none';
     document.getElementById('confirmar-detalle').style.display = 'flex';
@@ -246,7 +261,6 @@ function confirmarEliminacionDetalle() {
     let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
     if (seleccionados.length === 0) { cancelarModoEliminarDetalle(); return; }
     
-    // Anima el borrado de apuntes
     seleccionados.forEach(c => {
         let bloque = c.closest('.bloque-detalle');
         bloque.classList.remove('fade-in-up');
@@ -258,9 +272,12 @@ function confirmarEliminacionDetalle() {
     }, 300);
 }
 
+// === MODAL TEXTO ===
 function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = ""; document.getElementById('input-caja-texto').value = "";
-    document.getElementById('modal-texto').style.display = 'flex';
+    const modal = document.getElementById('modal-texto');
+    modal.style.display = 'flex';
+    modal.style.animation = 'soloFadeIn 0.2s';
 }
 function cerrarModalTexto() { document.getElementById('modal-texto').style.display = 'none'; }
 
@@ -271,7 +288,7 @@ function guardarTextoDeCaja() {
         let contenedor = document.getElementById('contenido-detalle');
         if(contenedor.querySelector('.vacio-msg')) contenedor.innerHTML = '';
         let div = document.createElement('div');
-        div.className = 'bloque-detalle fade-in-up'; // Entra con animación
+        div.className = 'bloque-detalle fade-in-up'; 
         let textoFormateado = texto.replace(/\n/g, '<br>');
         
         div.innerHTML = `
@@ -287,9 +304,9 @@ function guardarTextoDeCaja() {
         guardarContenidoDetalle(); cerrarModalTexto(); verificarContenidoDetalle();
     } else { alert("Por favor, ingresa contenido."); }
 }
-
 function guardarContenidoDetalle() { localStorage.setItem('contenido_' + itemActual, document.getElementById('contenido-detalle').innerHTML); }
 
+// === IMÁGENES CLOUDINARY ===
 function prepararImagen() { tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; document.getElementById('input-imagen').click(); }
 function cargarImagen(event) {
     let file = event.target.files[0];
@@ -297,7 +314,9 @@ function cargarImagen(event) {
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
-            document.getElementById('modal-recorte').style.display = 'flex';
+            const modal = document.getElementById('modal-recorte');
+            modal.style.display = 'flex';
+            modal.style.animation = 'soloFadeIn 0.2s';
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
@@ -318,7 +337,7 @@ async function confirmarRecorte() {
         let urlImagen = await subirImagenACloudinary(canvas.toDataURL('image/jpeg', 0.7));
 
         let div = document.createElement('div');
-        div.className = 'bloque-detalle fade-in-up'; // Entra con animación
+        div.className = 'bloque-detalle fade-in-up'; 
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">

@@ -12,7 +12,8 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
 
-/* === ANIMACIONES MAESTRAS === */
+/* === ANIMACIONES === */
+.pantalla { width: 100%; }
 .slide-in { animation: slideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .slide-out { animation: slideOut 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .fade-in-up { animation: fadeInUp 0.35s forwards ease-out; }
@@ -22,6 +23,7 @@ body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; ov
 @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 @keyframes fadeInUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 @keyframes fadeOut { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
+@keyframes soloFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Navegación y Pestañas */
 .barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
@@ -37,7 +39,7 @@ body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; ov
 .header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
 #titulo-detalle { font-size: 22px; font-weight: 700; margin: 0; color: white;}
 
-/* Listas y Contenedores */
+/* Listas y Tarjetas */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
 .item-lista { background: var(--card); padding: 18px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
@@ -45,7 +47,7 @@ body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; ov
 
 /* Modo Eliminar (Eliminar Oculto) */
 .lista-estricta .casilla-seleccion, .lista-estricta .casilla-seleccion-detalle { display: none; }
-.lista-estricta.modo-eliminar .casilla-seleccion, .lista-estricta.modo-eliminar .casilla-seleccion-detalle { display: inline-block; margin-right: 12px; animation: fadeInUp 0.2s;}
+.lista-estricta.modo-eliminar .casilla-seleccion, .lista-estricta.modo-eliminar .casilla-seleccion-detalle { display: inline-block; margin-right: 12px; animation: soloFadeIn 0.2s;}
 .lista-estricta.modo-eliminar .item-lista, .lista-estricta.modo-eliminar .bloque-detalle { border: 1px solid var(--red-dark); }
 input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; flex-shrink: 0;}
 
@@ -59,7 +61,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
 .texto-detalle { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word; }
 
-/* Tarjetas Transporte */
+/* Tarjetas (Pasajes) */
 .tarjeta-transporte { background: var(--card); border-radius: 16px; padding: 22px; border: 1px solid var(--border); position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);}
 .tarjeta-header { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
 .linea-roja { display: inline-block; width: 30px; height: 4px; background: #ef4444; border-radius: 2px;}
@@ -69,7 +71,11 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s;}
 .btn-viaje:active { transform: scale(0.97); }
 
-/* === BOTONES MINIMALISTAS SVGs === */
+/* === COLORES UNIVERSALES (CORRECCIÓN DE BOTÓN BLANCO) === */
+.azul { background-color: var(--blue-dark) !important; color: white !important; }
+.rojo { background-color: var(--red-dark) !important; color: white !important; }
+
+/* === BOTONES MINIMALISTAS (SVGs) === */
 .controles-flotantes { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
 .btn-cuadrado { 
     width: 55px; height: 55px; border-radius: 12px; border: none; 
@@ -78,8 +84,6 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
     transition: transform 0.1s ease; 
 }
 .btn-cuadrado:active { transform: scale(0.9); }
-.btn-cuadrado.azul { background-color: var(--blue-dark); color: white; }
-.btn-cuadrado.rojo { background-color: var(--red-dark); color: white; }
 /* Tamaño perfecto para los iconos SVG dentro de los botones */
 .btn-cuadrado svg { width: 24px; height: 24px; color: white; }
 
@@ -95,7 +99,6 @@ textarea.input-moderno { resize: none; }
 .botones-modal { display: flex; justify-content: flex-end; gap: 10px; }
 .botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
 .btn-modal-cancelar { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
-.btn-modal-guardar { background: var(--blue-dark); color: white; }
 .footer-recorte { padding: 15px; background: #000; display: flex; justify-content: space-between; gap: 10px; width: 100%;}
-.boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
-.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text); }
+.boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer;}
+.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text) !important; }
