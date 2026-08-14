@@ -122,8 +122,13 @@ let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper; 
 
+// --- NUEVO SISTEMA DE NAVEGACIÓN Y BOTÓN ATRÁS NATIVO ---
 function abrirDetalle(nombreItem) {
     itemActual = nombreItem;
+    
+    // ESTO ES LO NUEVO: Fuerza a la memoria del celular a registrar esta pantalla
+    window.history.pushState({ pantalla: 'detalle' }, "", "#detalle"); 
+    
     document.querySelector('.barra-navegacion').style.display = 'none';
     document.getElementById('pantalla-principal').style.display = 'none';
     document.getElementById('pantalla-detalle').style.display = 'block';
@@ -134,10 +139,29 @@ function abrirDetalle(nombreItem) {
 }
 
 function cerrarDetalle() {
+    // Cuando toques el botón "Atrás" de la app, simulará el botón físico
+    window.history.back(); 
+}
+
+function ejecutarCerrarDetalle() {
     document.querySelector('.barra-navegacion').style.display = 'flex';
     document.getElementById('pantalla-principal').style.display = 'block';
     document.getElementById('pantalla-detalle').style.display = 'none';
 }
+
+// El evento 'popstate' es el detector oficial del botón físico de Android
+window.addEventListener('popstate', function() {
+    // Si la URL ya no tiene el #detalle, significa que el celular retrocedió
+    if (window.location.hash !== '#detalle') {
+        ejecutarCerrarDetalle();
+        
+        // Si estaba recortando una foto, lo cancela por seguridad
+        document.getElementById('modal-recorte').style.display = 'none';
+        if(cropper) { cropper.destroy(); cropper = null; }
+        tituloImagenPendiente = "";
+    }
+});
+// ---------------------------------------------------------
 
 function agregarBloqueTexto() {
     let titulo = prompt("¿Qué título tendrá este texto?");
