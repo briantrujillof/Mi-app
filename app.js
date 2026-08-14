@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         touchendX = e.changedTouches[0].screenX;
         touchendY = e.changedTouches[0].screenY;
         
-        // Deslizar solo en pantalla principal sin modales ni modo editar activo
         if (document.getElementById('pantalla-principal').style.display !== 'none' &&
             document.getElementById('modal-recorte').style.display === 'none' &&
             document.getElementById('modal-texto').style.display === 'none' &&
@@ -60,7 +59,6 @@ function cambiarPestana(idPestana) {
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
 }
 
-// --- VERIFICAR CONTENIDO VACÍO ---
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -77,7 +75,7 @@ function verificarContenidoPrincipal() {
     });
 }
 
-// --- NUEVO MODO ELIMINAR (PUCP e Inglés) ---
+// --- MODO ELIMINAR (Principal) ---
 function activarModoEliminar(pestañaID, listaID) {
     document.getElementById(`flotantes-${pestañaID}`).style.display = 'none';
     document.getElementById(`confirmar-${pestañaID}`).style.display = 'flex';
@@ -88,7 +86,6 @@ function cancelarModoEliminar(pestañaID, listaID) {
     document.getElementById(`flotantes-${pestañaID}`).style.display = 'flex';
     document.getElementById(`confirmar-${pestañaID}`).style.display = 'none';
     document.getElementById(listaID).classList.remove('modo-eliminar');
-    // Desmarcar todos para evitar errores futuros
     document.getElementById(listaID).querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
 }
 
@@ -98,18 +95,15 @@ function confirmarEliminacion(pestañaID, listaID) {
         cancelarModoEliminar(pestañaID, listaID);
         return;
     }
-    // Como tiene botón rojo de confirmar, se borra directamente al pulsarlo
     seleccionados.forEach(c => c.closest('.item-lista').remove());
     guardarDatos();
     verificarContenidoPrincipal();
     cancelarModoEliminar(pestañaID, listaID);
 }
 
-// --- ELIMINAR DIRECTO PARA PENDIENTES ---
 function borrarSeleccionadosPendientes() {
-    let lista = document.getElementById('lista-pendientes');
-    let seleccionados = lista.querySelectorAll('.casilla-seleccion:checked');
-    if (seleccionados.length > 0 && confirm("¿Estás seguro de eliminar los pendientes seleccionados?")) {
+    let seleccionados = document.getElementById('lista-pendientes').querySelectorAll('.casilla-seleccion:checked');
+    if (seleccionados.length > 0 && confirm("¿Eliminar los pendientes seleccionados?")) {
         seleccionados.forEach(c => c.closest('.item-lista').remove());
         guardarDatos();
         verificarContenidoPrincipal();
@@ -118,12 +112,7 @@ function borrarSeleccionadosPendientes() {
 
 // --- NAVEGACIÓN A DETALLE ---
 function abrirDetalle(nombreItem) {
-    // Si la pestaña actual es Pendientes o Tarjetas, IGNORAR EL CLIC (Protección)
-    if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') {
-        return; 
-    }
-    
-    // Evitar entrar si estamos en modo editar
+    if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
 
     itemActual = nombreItem;
@@ -136,8 +125,6 @@ function abrirDetalle(nombreItem) {
     verificarContenidoDetalle();
 }
 
-function cerrarDetalle() { window.history.back(); }
-
 window.addEventListener('popstate', function() {
     if (window.location.hash !== '#detalle') {
         document.querySelector('.barra-navegacion').style.display = 'flex';
@@ -145,6 +132,7 @@ window.addEventListener('popstate', function() {
         document.getElementById('pantalla-detalle').style.display = 'none';
         document.getElementById('modal-recorte').style.display = 'none';
         document.getElementById('modal-texto').style.display = 'none';
+        cancelarModoEliminarDetalle(); // Cancela si te vas hacia atrás
         if(cropper) { cropper.destroy(); cropper = null; }
     }
 });
@@ -170,17 +158,10 @@ function agregarItemLista(idLista, nombre) {
     let li = document.createElement('div');
     li.className = 'item-lista';
     
-    // Solo PUCP e Inglés abren el detalle
     if (idLista === 'lista-pendientes') {
-        li.innerHTML = `
-            <input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()">
-            <span style="flex-grow:1;">${nombre}</span>
-        `;
+        li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span style="flex-grow:1;">${nombre}</span>`;
     } else {
-        li.innerHTML = `
-            <input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()">
-            <span onclick="abrirDetalle('${nombre}')" style="cursor:pointer; flex-grow:1;">${nombre}</span>
-        `;
+        li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span onclick="abrirDetalle('${nombre}')" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
     }
     
     ul.appendChild(li);
@@ -206,7 +187,7 @@ function cargarSaldosTarjetas() {
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
 }
 function agregarSaldo(tipo) {
-    let montoStr = prompt("¿Cuánto saldo deseas agregar? (Ej: 5.00)");
+    let montoStr = prompt("¿Cuánto saldo deseas agregar?");
     if(montoStr) {
         let monto = parseFloat(montoStr);
         if(!isNaN(monto) && monto > 0) {
@@ -226,7 +207,7 @@ function descontarPasaje(tipo, costo) {
     }
 }
 
-// --- DETALLE, TEXTO E IMÁGENES ---
+// --- MODO ELIMINAR DETALLE E INTERIOR DE CURSOS ---
 function verificarContenidoDetalle() {
     let contenedor = document.getElementById('contenido-detalle');
     let mensaje = contenedor.querySelector('.vacio-msg');
@@ -235,6 +216,31 @@ function verificarContenidoDetalle() {
     } else if (contenedor.children.length > 1 && mensaje) {
         mensaje.remove();
     }
+}
+
+function activarModoEliminarDetalle() {
+    document.getElementById('flotantes-detalle').style.display = 'none';
+    document.getElementById('confirmar-detalle').style.display = 'flex';
+    document.getElementById('contenido-detalle').classList.add('modo-eliminar');
+}
+
+function cancelarModoEliminarDetalle() {
+    document.getElementById('flotantes-detalle').style.display = 'flex';
+    document.getElementById('confirmar-detalle').style.display = 'none';
+    document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
+    document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
+}
+
+function confirmarEliminacionDetalle() {
+    let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
+    if (seleccionados.length === 0) {
+        cancelarModoEliminarDetalle();
+        return;
+    }
+    seleccionados.forEach(c => c.closest('.bloque-detalle').remove());
+    guardarContenidoDetalle();
+    verificarContenidoDetalle();
+    cancelarModoEliminarDetalle();
 }
 
 function abrirModalTexto() {
@@ -257,7 +263,7 @@ function guardarTextoDeCaja() {
         
         div.innerHTML = `
             <div style="display: flex; gap:10px; align-items:flex-start;">
-                <input type="checkbox" class="casilla-seleccion-detalle" style="margin-top:4px;">
+                <input type="checkbox" class="casilla-seleccion-detalle">
                 <div style="width: 100%;">
                     ${titulo ? `<h4>${titulo}</h4>` : ''}
                     <p class="texto-detalle">${textoFormateado}</p>
@@ -270,15 +276,6 @@ function guardarTextoDeCaja() {
         verificarContenidoDetalle();
     } else {
         alert("Por favor, ingresa contenido.");
-    }
-}
-
-function borrarSeleccionadosDetalle() {
-    let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
-    if (seleccionados.length > 0 && confirm("¿Eliminar apunte?")) {
-        seleccionados.forEach(c => c.closest('.bloque-detalle').remove());
-        guardarContenidoDetalle();
-        verificarContenidoDetalle();
     }
 }
 
@@ -321,9 +318,11 @@ async function confirmarRecorte() {
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
-                <h4>${tituloImagenPendiente}</h4>
+                <div style="width: 100%;">
+                    <h4>${tituloImagenPendiente}</h4>
+                    <img src="${urlImagen}" class="imagen-galeria">
+                </div>
             </div>
-            <img src="${urlImagen}" class="imagen-galeria">
         `;
         contenedor.appendChild(div);
         guardarContenidoDetalle();
