@@ -5,7 +5,7 @@ let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
 
-// === SWIPE LOGIC ===
+// === LÓGICA DE SWIPE (Pestañas) ===
 let touchstartX = 0;
 let touchstartY = 0;
 let touchendX = 0;
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         touchendX = e.changedTouches[0].screenX;
         touchendY = e.changedTouches[0].screenY;
         
+        // Bloquear swipe si hay modales o modo eliminar abierto
         if (document.getElementById('pantalla-principal').style.display !== 'none' &&
             document.getElementById('modal-recorte').style.display === 'none' &&
             document.getElementById('modal-texto').style.display === 'none' &&
@@ -59,6 +60,7 @@ function cambiarPestana(idPestana) {
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
 }
 
+// --- VERIFICACIONES DE VACÍO ---
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -75,7 +77,17 @@ function verificarContenidoPrincipal() {
     });
 }
 
-// --- MODO ELIMINAR (Principal) ---
+function verificarContenidoDetalle() {
+    let contenedor = document.getElementById('contenido-detalle');
+    let mensaje = contenedor.querySelector('.vacio-msg');
+    if (contenedor.children.length === 0 && !mensaje) {
+        contenedor.innerHTML = '<div class="vacio-msg">Apuntes vacíos. Usa los botones T o 🖼️.</div>';
+    } else if (contenedor.children.length > 1 && mensaje) {
+        mensaje.remove();
+    }
+}
+
+// --- LÓGICA MODO ELIMINAR (Principal) ---
 function activarModoEliminar(pestañaID, listaID) {
     document.getElementById(`flotantes-${pestañaID}`).style.display = 'none';
     document.getElementById(`confirmar-${pestañaID}`).style.display = 'flex';
@@ -95,45 +107,98 @@ function confirmarEliminacion(pestañaID, listaID) {
         cancelarModoEliminar(pestañaID, listaID);
         return;
     }
-    seleccionados.forEach(c => c.closest('.item-lista').remove());
-    guardarDatos();
-    verificarContenidoPrincipal();
-    cancelarModoEliminar(pestañaID, listaID);
+    // Animación de salida al eliminar
+    seleccionados.forEach(c => {
+        let item = c.closest('.item-lista');
+        item.classList.add('fade-out');
+        setTimeout(() => item.remove(), 300);
+    });
+    
+    setTimeout(() => {
+        guardarDatos();
+        verificarContenidoPrincipal();
+        cancelarModoEliminar(pestañaID, listaID);
+    }, 310);
 }
 
+// Pendientes se elimina directo
 function borrarSeleccionadosPendientes() {
     let seleccionados = document.getElementById('lista-pendientes').querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length > 0 && confirm("¿Eliminar los pendientes seleccionados?")) {
-        seleccionados.forEach(c => c.closest('.item-lista').remove());
-        guardarDatos();
-        verificarContenidoPrincipal();
+        seleccionados.forEach(c => {
+            let item = c.closest('.item-lista');
+            item.classList.add('fade-out');
+            setTimeout(() => item.remove(), 300);
+        });
+        setTimeout(() => {
+            guardarDatos();
+            verificarContenidoPrincipal();
+        }, 310);
     }
 }
 
-// --- NAVEGACIÓN A DETALLE ---
+// --- TRANSICIONES Y NAVEGACIÓN A DETALLE ---
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     if (document.querySelector('.modo-eliminar')) return;
 
-    itemActual = nombreItem;
-    window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
-    document.querySelector('.barra-navegacion').style.display = 'none';
-    document.getElementById('pantalla-principal').style.display = 'none';
-    document.getElementById('pantalla-detalle').style.display = 'block';
-    document.getElementById('titulo-detalle').innerText = nombreItem;
-    document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
-    verificarContenidoDetalle();
+    const main = document.getElementById('pantalla-principal');
+    const nav = document.getElementById('nav-principal');
+    const detalle = document.getElementById('pantalla-detalle');
+
+    // Transición de salida
+    main.classList.add('fade-out');
+    nav.classList.add('fade-out');
+    
+    setTimeout(() => {
+        itemActual = nombreItem;
+        window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
+        
+        main.style.display = 'none';
+        nav.style.display = 'none';
+        
+        detalle.style.display = 'block';
+        document.getElementById('titulo-detalle').innerText = nombreItem;
+        document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
+        verificarContenidoDetalle();
+        
+        // Limpieza de clases para la siguiente vez
+        main.classList.remove('fade-out');
+        nav.classList.remove('fade-out');
+        
+        // Transición de entrada
+        detalle.classList.add('fade-in');
+        setTimeout(() => detalle.classList.remove('fade-in'), 300);
+    }, 300);
 }
 
 window.addEventListener('popstate', function() {
     if (window.location.hash !== '#detalle') {
-        document.querySelector('.barra-navegacion').style.display = 'flex';
-        document.getElementById('pantalla-principal').style.display = 'block';
-        document.getElementById('pantalla-detalle').style.display = 'none';
-        document.getElementById('modal-recorte').style.display = 'none';
-        document.getElementById('modal-texto').style.display = 'none';
-        cancelarModoEliminarDetalle(); // Cancela si te vas hacia atrás
-        if(cropper) { cropper.destroy(); cropper = null; }
+        const main = document.getElementById('pantalla-principal');
+        const nav = document.getElementById('nav-principal');
+        const detalle = document.getElementById('pantalla-detalle');
+        
+        detalle.classList.add('fade-out');
+        cancelarModoEliminarDetalle();
+        
+        setTimeout(() => {
+            detalle.style.display = 'none';
+            detalle.classList.remove('fade-out');
+            
+            nav.style.display = 'flex';
+            main.style.display = 'block';
+            
+            main.classList.add('fade-in');
+            nav.classList.add('fade-in');
+            setTimeout(() => {
+                main.classList.remove('fade-in');
+                nav.classList.remove('fade-in');
+            }, 300);
+            
+            document.getElementById('modal-recorte').style.display = 'none';
+            document.getElementById('modal-texto').style.display = 'none';
+            if(cropper) { cropper.destroy(); cropper = null; }
+        }, 300);
     }
 });
 
@@ -156,7 +221,7 @@ function agregarItemLista(idLista, nombre) {
     if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
 
     let li = document.createElement('div');
-    li.className = 'item-lista';
+    li.className = 'item-lista animacion-entrada';
     
     if (idLista === 'lista-pendientes') {
         li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span style="flex-grow:1;">${nombre}</span>`;
@@ -181,11 +246,12 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// --- TARJETAS PASAJES ---
+// --- TARJETAS DE PASAJES (MONTOS EXACTOS) ---
 function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
 }
+
 function agregarSaldo(tipo) {
     let montoStr = prompt("¿Cuánto saldo deseas agregar?");
     if(montoStr) {
@@ -197,27 +263,23 @@ function agregarSaldo(tipo) {
         }
     }
 }
+
 function descontarPasaje(tipo, costo) {
     let actual = parseFloat(localStorage.getItem('saldo_'+tipo) || (tipo==='corredor'?10:5));
+    
+    // Validacion segura de los costos exactos
+    if(tipo === 'corredor') costo = 1.21;
+    if(tipo === 'tren') costo = 0.75;
+    
     if(actual >= costo) {
-        localStorage.setItem('saldo_'+tipo, actual - costo);
+        localStorage.setItem('saldo_'+tipo, (actual - costo).toFixed(2));
         cargarSaldosTarjetas();
     } else {
         alert("Saldo insuficiente para viajar.");
     }
 }
 
-// --- MODO ELIMINAR DETALLE E INTERIOR DE CURSOS ---
-function verificarContenidoDetalle() {
-    let contenedor = document.getElementById('contenido-detalle');
-    let mensaje = contenedor.querySelector('.vacio-msg');
-    if (contenedor.children.length === 0 && !mensaje) {
-        contenedor.innerHTML = '<div class="vacio-msg">Apuntes vacíos. Usa los botones T o 🖼️.</div>';
-    } else if (contenedor.children.length > 1 && mensaje) {
-        mensaje.remove();
-    }
-}
-
+// --- MODO ELIMINAR EN DETALLE (APUNTES) ---
 function activarModoEliminarDetalle() {
     document.getElementById('flotantes-detalle').style.display = 'none';
     document.getElementById('confirmar-detalle').style.display = 'flex';
@@ -237,18 +299,39 @@ function confirmarEliminacionDetalle() {
         cancelarModoEliminarDetalle();
         return;
     }
-    seleccionados.forEach(c => c.closest('.bloque-detalle').remove());
-    guardarContenidoDetalle();
-    verificarContenidoDetalle();
-    cancelarModoEliminarDetalle();
+    
+    seleccionados.forEach(c => {
+        let bloque = c.closest('.bloque-detalle');
+        bloque.classList.add('fade-out');
+        setTimeout(() => bloque.remove(), 300);
+    });
+    
+    setTimeout(() => {
+        guardarContenidoDetalle();
+        verificarContenidoDetalle();
+        cancelarModoEliminarDetalle();
+    }, 310);
 }
 
+// --- MODAL DE TEXTO (TÍTULO Y CONTENIDO) ---
 function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = "";
     document.getElementById('input-caja-texto').value = "";
-    document.getElementById('modal-texto').style.display = 'flex';
+    
+    const modal = document.getElementById('modal-texto');
+    modal.style.display = 'flex';
+    modal.classList.add('fade-in');
+    setTimeout(() => modal.classList.remove('fade-in'), 300);
 }
-function cerrarModalTexto() { document.getElementById('modal-texto').style.display = 'none'; }
+
+function cerrarModalTexto() { 
+    const modal = document.getElementById('modal-texto');
+    modal.classList.add('fade-out');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('fade-out');
+    }, 300);
+}
 
 function guardarTextoDeCaja() {
     let titulo = document.getElementById('input-caja-titulo').value.trim();
@@ -257,8 +340,9 @@ function guardarTextoDeCaja() {
     if (texto) {
         let contenedor = document.getElementById('contenido-detalle');
         if(contenedor.querySelector('.vacio-msg')) contenedor.innerHTML = '';
+        
         let div = document.createElement('div');
-        div.className = 'bloque-detalle';
+        div.className = 'bloque-detalle animacion-entrada'; // Transición al agregar
         let textoFormateado = texto.replace(/\n/g, '<br>');
         
         div.innerHTML = `
@@ -286,13 +370,19 @@ function prepararImagen() {
     tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte";
     document.getElementById('input-imagen').click();
 }
+
 function cargarImagen(event) {
     let file = event.target.files[0];
     if(file) {
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
-            document.getElementById('modal-recorte').style.display = 'flex';
+            
+            const modal = document.getElementById('modal-recorte');
+            modal.style.display = 'flex';
+            modal.classList.add('fade-in');
+            setTimeout(() => modal.classList.remove('fade-in'), 300);
+            
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
@@ -300,10 +390,17 @@ function cargarImagen(event) {
     }
     event.target.value = ""; 
 }
+
 function cancelarRecorte() {
-    document.getElementById('modal-recorte').style.display = 'none';
-    if(cropper) { cropper.destroy(); cropper = null; }
+    const modal = document.getElementById('modal-recorte');
+    modal.classList.add('fade-out');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('fade-out');
+        if(cropper) { cropper.destroy(); cropper = null; }
+    }, 300);
 }
+
 async function confirmarRecorte() {
     if(cropper) {
         document.getElementById('modal-recorte').style.display = 'none';
@@ -314,7 +411,7 @@ async function confirmarRecorte() {
         let urlImagen = await subirImagenACloudinary(canvas.toDataURL('image/jpeg', 0.7));
 
         let div = document.createElement('div');
-        div.className = 'bloque-detalle';
+        div.className = 'bloque-detalle animacion-entrada'; // Transición al agregar
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
@@ -330,6 +427,7 @@ async function confirmarRecorte() {
         cropper.destroy(); cropper = null;
     }
 }
+
 async function subirImagenACloudinary(dataUrl) {
     const formData = new FormData();
     formData.append("file", dataUrl);

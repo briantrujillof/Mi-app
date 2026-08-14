@@ -10,14 +10,26 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden;}
+body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; }
 
-/* Navegación */
-.barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
+/* === ANIMACIONES Y TRANSICIONES (NUEVO) === */
+.transicion-base { transition: opacity 0.3s ease, transform 0.3s ease; }
+.fade-out { opacity: 0; transform: scale(0.98); }
+.fade-in { opacity: 1; transform: scale(1); }
+
+/* Animación para cuando agregas un curso o apunte nuevo */
+@keyframes aparecerSuave {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animacion-entrada { animation: aparecerSuave 0.4s ease forwards; }
+
+/* Navegación Principal */
+.barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px; transition: opacity 0.3s ease;}
 .btn-nav { background: transparent; border: none; color: var(--muted); font-size: 15px; font-weight: 500; cursor: pointer; padding-bottom: 5px; transition: color 0.3s ease;}
 .btn-nav.activo { color: var(--text); border-bottom: 2px solid #3b82f6; font-weight: 600; }
 
-.pestana { display: none; padding: 0 15px; }
+.pestana { display: none; padding: 0 15px; animation: aparecerSuave 0.3s ease; }
 .pestana.activa { display: block; }
 
 /* Cabeceras y Logos SVG */
@@ -25,18 +37,19 @@ body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; ov
 .titulo-seccion { font-size: 24px; font-weight: 700; letter-spacing: -0.5px;}
 .logo-seccion-svg { width: 30px; height: 30px; color: #60a5fa; } 
 
-/* Cabecera del Curso (Sin botón atrás) */
-.header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center;}
-#titulo-detalle { font-size: 22px; font-weight: 700; margin: 0; }
+/* Cabecera Detalle (Sin botón atrás, título centrado) */
+.header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; display: flex; justify-content: center; align-items: center;}
+#titulo-detalle { font-size: 22px; font-weight: 700; margin: 0; color: white;}
 
-/* Listas */
+/* Listas y Contenedores */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
 
-.item-lista { background: var(--card); padding: 18px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2);}
-.item-lista span { font-size: 17px; font-weight: 500; transition: color 0.2s; word-wrap: break-word;}
+/* Estilo Tarjetas de Cursos/Apuntes */
+.item-lista { background: var(--card); padding: 18px 15px; border-radius: 12px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: all 0.3s ease;}
+.item-lista span { font-size: 17px; font-weight: 500; word-wrap: break-word;}
 
-/* Lógica de Modo Edición / Eliminar (Ahora aplica al Detalle también) */
+/* === LÓGICA DE MODO EDICIÓN (Eliminar sin que se vea el cuadrado inicial) === */
 .lista-estricta .casilla-seleccion,
 .lista-estricta .casilla-seleccion-detalle { display: none; }
 
@@ -44,51 +57,61 @@ body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; ov
 .lista-estricta.modo-eliminar .casilla-seleccion-detalle { display: inline-block; animation: popIn 0.2s ease; margin-right: 12px;}
 
 .lista-estricta.modo-eliminar .item-lista,
-.lista-estricta.modo-eliminar .bloque-detalle { border: 1px solid var(--red-dark); }
+.lista-estricta.modo-eliminar .bloque-detalle { border: 1px solid var(--red-dark); transform: translateX(5px); }
 @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
 input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; flex-shrink: 0;}
 
 /* Mensajes de Vacío */
-.vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px; }
+.vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px; animation: aparecerSuave 0.4s ease;}
 .vacio-msg { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; margin-top: 20px;}
 
-/* Diseño de Lectura para los Apuntes (Más aire, menos apretado) */
-.bloque-detalle { background: var(--card); padding: 22px 20px; border-radius: 12px; border: 1px solid var(--border); }
+/* Diseño de Lectura para Apuntes (Más aire, mejor legibilidad) */
+.bloque-detalle { background: var(--card); padding: 22px 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.3s ease;}
 .bloque-detalle h4 { margin-bottom: 8px; font-size: 18px; color: #60a5fa; font-weight: 600;}
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
 .texto-detalle { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word; }
 
-/* Tarjetas (Pasajes) */
-.tarjeta-transporte { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); position: relative; }
+/* Tarjetas de Transporte */
+.tarjeta-transporte { background: var(--card); border-radius: 16px; padding: 22px; border: 1px solid var(--border); position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);}
 .tarjeta-header { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
 .linea-roja { display: inline-block; width: 30px; height: 4px; background: #ef4444; border-radius: 2px;}
 .linea-verde { display: inline-block; width: 30px; height: 4px; background: #10b981; border-radius: 2px;}
 .tarjeta-saldo { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
 .btn-texto-azul { background: transparent; border: none; color: #3b82f6; font-size: 15px; font-weight: 600; margin-bottom: 20px; cursor: pointer;}
-.btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;}
+.btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s;}
+.btn-viaje:active { transform: scale(0.97); }
 
-/* Botones Cuadrados Flotantes (¡Fijos, sin animación que salte!) */
+/* === BOTONES MINIMALISTAS (NUEVO DISEÑO) === */
 .controles-flotantes { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 100; }
-.btn-cuadrado { width: 55px; height: 55px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.05); font-weight: bold; font-size: 24px; cursor: pointer; box-shadow: 0 6px 15px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; color: white;}
-.azul { background-color: var(--blue-dark); }
-.rojo { background-color: var(--red-dark); }
+.btn-cuadrado { 
+    width: 50px; height: 50px; border-radius: 8px; 
+    border: none; font-size: 22px; font-weight: 600; 
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease, background 0.2s ease; 
+}
+.btn-cuadrado:active { transform: scale(0.9); }
+.btn-cuadrado.azul { background-color: var(--blue-dark); color: white; }
+.btn-cuadrado.rojo { background-color: var(--red-dark); color: white; }
 
-/* Barra Confirmar Eliminación Abajo */
+/* Barra Confirmar Eliminación */
 .controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 100; animation: slideUp 0.3s ease; }
-.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text); }
 @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
 /* Modales */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-.modal-caja { background: var(--card); width: 90%; max-width: 400px; padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
+.modal-caja { background: var(--card); width: 90%; max-width: 400px; padding: 24px; border-radius: 16px; border: 1px solid var(--border); animation: popIn 0.3s ease; }
 .modal-caja h3 { margin-bottom: 18px; color: white; font-size: 20px;}
 .input-moderno { width: 100%; background: var(--bg); color: white; border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 15px; margin-bottom: 15px; outline: none; }
 textarea.input-moderno { resize: none; }
 .botones-modal { display: flex; justify-content: flex-end; gap: 10px; }
-.botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px;}
+.botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; transition: transform 0.2s;}
+.botones-modal button:active { transform: scale(0.95); }
 .btn-modal-cancelar { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
 .btn-modal-guardar { background: var(--blue-dark); color: white; }
 
 .footer-recorte { padding: 15px; background: #000; display: flex; justify-content: space-between; gap: 10px; }
-.boton-largo { flex-grow: 1; padding: 14px; border-radius: 10px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
+.boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white; transition: transform 0.2s;}
+.boton-largo:active { transform: scale(0.97); }
+.transparente { background: var(--bg); border: 1px solid var(--muted); color: var(--text); }
