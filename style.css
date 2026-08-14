@@ -45,11 +45,19 @@ main { padding: 25px 20px; }
 }
 
 .contenedor-lista { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* REGLA ANTICLICK/SELECCIÓN DE TEXTO PARA ARRASTRAR SIN ERRORES */
+.item-lista, .bloque-detalle, .texto-clickeable, .cabecera-detalle h2, .bloque-detalle h3 {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 .item-lista {
     background-color: #16263a; padding: 15px; border-radius: 12px;
     border-left: 4px solid #4a90e2; font-size: 16px; font-weight: 600;
-    display: flex; align-items: center; gap: 15px; 
-    cursor: grab; /* Permite arrastrar */
+    display: flex; align-items: center; gap: 15px; cursor: grab;
 }
 .casilla-seleccion { width: 22px; height: 22px; cursor: pointer; }
 .contenedor-lista:empty + .boton-eliminar-global { display: none; }
@@ -59,7 +67,6 @@ main { padding: 25px 20px; }
     width: 100%; cursor: pointer; margin-top: 20px;
 }
 
-/* --- PANTALLA SECUNDARIA Y BLOQUES DINÁMICOS --- */
 #pantalla-detalle {
     padding: 25px 20px; background-color: #0b192c; min-height: 100vh;
     position: absolute; top: 0; left: 0; width: 100%; z-index: 200; 
@@ -70,19 +77,19 @@ main { padding: 25px 20px; }
 
 .bloque-detalle {
     background-color: #16263a; padding: 15px; border-radius: 12px;
-    border-left: 4px solid #4a90e2; margin-bottom: 15px;
-    cursor: grab; /* Indica que también se pueden mover arrastrando */
+    border-left: 4px solid #4a90e2; margin-bottom: 15px; cursor: grab;
 }
 
-/* Nuevo checkbox para el interior de los cursos */
 .casilla-seleccion-detalle { width: 20px; height: 20px; cursor: pointer; }
 
+/* Permite escribir y seleccionar texto SÓLO en el cuadro de apuntes */
 .bloque-texto {
     width: 100%; min-height: 80px; background-color: transparent; color: white;
     border: 1px solid #4a90e2; border-radius: 8px; padding: 10px; resize: vertical; margin-top: 10px;
+    -webkit-user-select: auto; user-select: auto;
 }
 
 .imagen-galeria {
-    width: auto; max-width: 100%; max-height: 200px; /* Límite para que la imagen no sea gigante */
+    width: auto; max-width: 100%; max-height: 250px; 
     object-fit: contain; border-radius: 8px; margin-top: 10px; display: block;
 }

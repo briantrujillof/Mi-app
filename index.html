@@ -6,10 +6,9 @@
     <title>Mi App Estudiantil</title>
     <link rel="stylesheet" href="style.css">
     
-<link rel="manifest" href="manifest.json">
-
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="manifest" href="manifest.json">
     
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
@@ -23,10 +22,9 @@
     </nav>
 
     <main id="pantalla-principal">
-        
         <section id="universidad" class="pestana activa">
             <div class="cabecera">
-                <img src="pucp.png" alt="PUCP" class="logo">
+                <img src="pucp.png" alt="PUCP" class="logo" onerror="this.style.display='none'">
                 <h2>Universidad</h2>
             </div>
             <button class="boton-agregar" onclick="agregarCurso()">Agregar Curso</button>
@@ -36,7 +34,7 @@
 
         <section id="ingles" class="pestana">
             <div class="cabecera">
-                <img src="britanico.png" alt="Británico" class="logo">
+                <img src="britanico.png" alt="Británico" class="logo" onerror="this.style.display='none'">
                 <h2>Británico</h2>
             </div>
             <button class="boton-agregar" onclick="agregarCiclo()">Agregar Ciclo</button>
@@ -46,7 +44,7 @@
 
         <section id="pendientes" class="pestana">
             <div class="cabecera">
-                <img src="https://cdn-icons-png.flaticon.com/512/906/906334.png" alt="Tareas" class="logo-icono">
+                <img src="https://cdn-icons-png.flaticon.com/512/906/906334.png" alt="Tareas" class="logo-icono" onerror="this.style.display='none'">
                 <h2>Mis Tareas</h2>
             </div>
             <button class="boton-agregar" onclick="agregarPendiente()">Agregar Pendiente</button>
@@ -56,7 +54,7 @@
 
         <section id="tarjetas" class="pestana">
             <div class="cabecera">
-                <img src="https://cdn-icons-png.flaticon.com/512/179/179431.png" alt="Tarjetas" class="logo-icono">
+                <img src="https://cdn-icons-png.flaticon.com/512/179/179431.png" alt="Tarjetas" class="logo-icono" onerror="this.style.display='none'">
                 <h2>Mis Pasajes</h2>
             </div>
             <div class="tarjeta-transporte corredor">
@@ -72,7 +70,6 @@
                 <button class="boton-viaje" onclick="registrarViajeTren()">Confirmar Viaje</button>
             </div>
         </section>
-
     </main>
 
     <main id="pantalla-detalle" style="display: none;">

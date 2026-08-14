@@ -1,7 +1,5 @@
-// --- NAVEGACIÓN Y MEMORIA ---
 function cambiarPestana(idPestana) {
-    let todasLasPestanas = document.querySelectorAll('.pestana');
-    todasLasPestanas.forEach(p => p.classList.remove('activa'));
+    document.querySelectorAll('.pestana').forEach(p => p.classList.remove('activa'));
     document.getElementById(idPestana).classList.add('activa');
 }
 
@@ -25,32 +23,27 @@ function cargarDatos() {
 
 window.onload = cargarDatos;
 
-// --- ACTIVAR ARRASTRAR Y SOLTAR ---
 function activarArrastrarYSoltar() {
     const opciones = {
         animation: 150,
-        delay: 200, // Hay que mantener presionado un poquito para mover
+        delay: 200, 
         delayOnTouchOnly: true,
-        onEnd: function () {
-            guardarDatos(); 
-        }
+        fallbackTolerance: 5,
+        onEnd: function () { guardarDatos(); }
     };
     new Sortable(document.getElementById('lista-cursos-universidad'), opciones);
     new Sortable(document.getElementById('lista-ciclos-ingles'), opciones);
     new Sortable(document.getElementById('lista-pendientes'), opciones);
     
-    // Se activa también para el interior del curso
     new Sortable(document.getElementById('contenido-detalle'), {
         animation: 150,
         delay: 200,
         delayOnTouchOnly: true,
-        onEnd: function() {
-            guardarContenidoDetalle();
-        }
+        fallbackTolerance: 5,
+        onEnd: function() { guardarContenidoDetalle(); }
     });
 }
 
-// --- LÓGICA DE TARJETAS ---
 function registrarViajeCorredor() {
     let el = document.querySelector('.tarjeta-transporte.corredor .saldo-numero');
     let saldo = parseFloat(el.textContent.replace('S/ ', ''));
@@ -79,7 +72,6 @@ function agregarSaldoTren() {
     }
 }
 
-// --- LÓGICA DE LISTAS ---
 function agregarCurso() {
     let nombre = prompt("¿Cuál es el nombre del curso?");
     if (nombre) {
@@ -108,7 +100,6 @@ function agregarPendiente() {
         let contenedor = document.getElementById("lista-pendientes");
         let nuevoItem = document.createElement("div");
         nuevoItem.className = "item-lista";
-        // Aquí quitamos el texto-clickeable y el onclick
         nuevoItem.innerHTML = `<input type="checkbox" class="casilla-seleccion"> <span>${nombre}</span>`;
         contenedor.appendChild(nuevoItem); guardarDatos(); 
     }
@@ -124,10 +115,9 @@ function borrarSeleccionados(idLista) {
             checkboxes.forEach(box => { if (box.checked) box.parentElement.remove(); });
             guardarDatos(); 
         }
-    } else alert("Primero marca el cuadradito de lo que quieres eliminar.");
+    } else alert("Primero marca el cuadradito.");
 }
 
-// --- LÓGICA DE PANTALLA DE DETALLES (INTERIOR DEL CURSO) ---
 let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper; 
@@ -155,8 +145,6 @@ function agregarBloqueTexto() {
         let contenedor = document.getElementById('contenido-detalle');
         let nuevoBloque = document.createElement('div');
         nuevoBloque.className = 'bloque-detalle';
-        
-        // Ahora tiene el checkbox incorporado
         nuevoBloque.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
@@ -177,7 +165,6 @@ function prepararImagen() {
     }
 }
 
-// --- LÓGICA DE RECORTAR IMAGEN ---
 function cargarImagen(event) {
     let archivo = event.target.files[0];
     if (archivo && tituloImagenPendiente) {
@@ -201,14 +188,15 @@ function cargarImagen(event) {
 
 function confirmarRecorte() {
     if(cropper) {
-        let canvas = cropper.getCroppedCanvas();
-        let imagenRecortada = canvas.toDataURL('image/jpeg'); 
+        document.getElementById('modal-recorte').style.display = 'none';
+        
+        // COMPRESIÓN DE IMAGEN: Evita que el celular bloquee el guardado por exceso de memoria
+        let canvas = cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 });
+        let imagenRecortada = canvas.toDataURL('image/jpeg', 0.6); 
 
         let contenedor = document.getElementById('contenido-detalle');
         let nuevoBloque = document.createElement('div');
         nuevoBloque.className = 'bloque-detalle';
-
-        // Ahora tiene el checkbox incorporado
         nuevoBloque.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
@@ -218,41 +206,39 @@ function confirmarRecorte() {
         `;
         contenedor.appendChild(nuevoBloque);
         guardarContenidoDetalle();
-        cerrarRecorte();
+        
+        cropper.destroy(); 
+        cropper = null; 
+        tituloImagenPendiente = "";
     }
 }
 
 function cancelarRecorte() {
-    cerrarRecorte();
-}
-
-function cerrarRecorte() {
     document.getElementById('modal-recorte').style.display = 'none';
     if(cropper) { cropper.destroy(); cropper = null; }
     tituloImagenPendiente = "";
 }
 
-// --- LÓGICA PARA ELIMINAR TÍTULOS DENTRO DEL CURSO ---
 function guardarContenidoDetalle() {
     let htmlContenido = document.getElementById('contenido-detalle').innerHTML;
-    localStorage.setItem('contenido_' + itemActual, htmlContenido);
+    try {
+        localStorage.setItem('contenido_' + itemActual, htmlContenido);
+    } catch (error) {
+        alert("Aviso: Memoria local llena. Por favor borra apuntes antiguos para guardar imágenes nuevas.");
+    }
 }
 
 function borrarSeleccionadosDetalle() {
     let contenedor = document.getElementById('contenido-detalle');
-    // Buscamos los cuadraditos marcados dentro del curso
     let checkboxes = contenedor.querySelectorAll('.casilla-seleccion-detalle');
     let haySeleccionados = Array.from(checkboxes).some(box => box.checked);
 
     if (haySeleccionados) {
         if (confirm("¿Deseas eliminar los apuntes o imágenes seleccionadas?")) {
             checkboxes.forEach(box => { 
-                if (box.checked) {
-                    // Eliminamos todo el bloque (cuadro azul) donde está ese checkbox
-                    box.closest('.bloque-detalle').remove(); 
-                }
+                if (box.checked) box.closest('.bloque-detalle').remove(); 
             });
-            guardarContenidoDetalle(); // Guardamos para que no vuelvan a aparecer
+            guardarContenidoDetalle(); 
         }
     } else {
         alert("Primero marca el cuadradito del título que quieres eliminar.");
