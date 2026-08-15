@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Académica</title>
-    <!-- Ícono H Moderno para la App -->
+    
+    <!-- Configuración PWA (Para que sea una App real) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#070b14">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' rx='50' fill='%231e3a8a'/><path d='M80 64v128M176 64v128M80 128h96' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' fill='%231e3a8a'/><path d='M80 64v128M176 64v128M80 128h96' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -58,7 +62,7 @@
                     <div class="tarjeta-saldo">S/ <span id="saldo-corredor">10.00</span></div>
                     <button class="btn-viaje" style="margin-bottom: 15px;" onclick="abrirHistorial('corredor')">Ver Movimientos</button>
                     <div style="display:flex; gap:10px;">
-                        <button class="btn-texto-azul" onclick="agregarSaldo('corredor')">+ Recarga</button>
+                        <button class="btn-texto-azul" onclick="agregarSaldo('corredor')">+ Recargar</button>
                         <button class="btn-viaje" onclick="descontarPasaje('corredor', 1.21)">🚌 Viaje (-1.21)</button>
                     </div>
                 </div>
@@ -67,7 +71,7 @@
                     <div class="tarjeta-saldo">S/ <span id="saldo-tren">5.00</span></div>
                     <button class="btn-viaje" style="margin-bottom: 15px;" onclick="abrirHistorial('tren')">Ver Movimientos</button>
                     <div style="display:flex; gap:10px;">
-                        <button class="btn-texto-azul" onclick="agregarSaldo('tren')">+ Recarga</button>
+                        <button class="btn-texto-azul" onclick="agregarSaldo('tren')">+ Recargar</button>
                         <button class="btn-viaje" onclick="descontarPasaje('tren', 0.75)">🚆 Viaje (-0.75)</button>
                     </div>
                 </div>
@@ -75,7 +79,7 @@
         </section>
     </main>
 
-    <!-- PANTALLA DETALLE (APUNTES O HISTORIAL) -->
+    <!-- PANTALLA DETALLE (APUNTES E HISTORIAL) -->
     <main id="pantalla-detalle" class="pantalla" style="display: none;">
         <div class="header-detalle">
             <h2 id="titulo-detalle"></h2>
@@ -85,44 +89,37 @@
     </main>
 
     <!-- ========================================================= -->
-    <!-- CONTROLES FLOTANTES GLOBALES Y CONFIRMACIONES -->
+    <!-- CONTROLES FLOTANTES Y DE CONFIRMACIÓN                     -->
     <!-- ========================================================= -->
     
-    <!-- Controles Universidad -->
     <div class="controles-flotantes" id="flotantes-universidad" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarCurso()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
         <button class="btn-cuadrado azul" onclick="activarModoEditar('universidad', 'lista-cursos-universidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
         <button class="btn-cuadrado rojo" onclick="activarModoEliminar('universidad', 'lista-cursos-universidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
     </div>
-    <!-- Confirmar Eliminar -->
     <div class="controles-confirmar" id="confirmar-universidad" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEliminar('universidad', 'lista-cursos-universidad')">Cancelar</button>
         <button class="boton-largo rojo" onclick="confirmarEliminacion('universidad', 'lista-cursos-universidad')">Eliminar Cursos</button>
     </div>
-    <!-- Confirmar Editar -->
     <div class="controles-confirmar" id="confirmar-editar-universidad" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEditar('universidad', 'lista-cursos-universidad')">Cancelar</button>
-        <button class="boton-largo azul" onclick="confirmarEdicion('universidad', 'lista-cursos-universidad')">Confirmar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('universidad', 'lista-cursos-universidad')">Confirmar Edición</button>
     </div>
 
-    <!-- Controles Inglés -->
     <div class="controles-flotantes" id="flotantes-ingles" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarCiclo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
         <button class="btn-cuadrado azul" onclick="activarModoEditar('ingles', 'lista-ciclos-ingles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
         <button class="btn-cuadrado rojo" onclick="activarModoEliminar('ingles', 'lista-ciclos-ingles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
     </div>
-    <!-- Confirmar Eliminar -->
     <div class="controles-confirmar" id="confirmar-ingles" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEliminar('ingles', 'lista-ciclos-ingles')">Cancelar</button>
         <button class="boton-largo rojo" onclick="confirmarEliminacion('ingles', 'lista-ciclos-ingles')">Eliminar Ciclos</button>
     </div>
-    <!-- Confirmar Editar -->
     <div class="controles-confirmar" id="confirmar-editar-ingles" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEditar('ingles', 'lista-ciclos-ingles')">Cancelar</button>
-        <button class="boton-largo azul" onclick="confirmarEdicion('ingles', 'lista-ciclos-ingles')">Confirmar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('ingles', 'lista-ciclos-ingles')">Confirmar Edición</button>
     </div>
 
-    <!-- Controles Pendientes -->
     <div class="controles-flotantes" id="flotantes-pendientes" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarPendiente()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
         <button class="btn-cuadrado azul" onclick="activarModoEditar('pendientes', 'lista-pendientes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
@@ -130,10 +127,9 @@
     </div>
     <div class="controles-confirmar" id="confirmar-editar-pendientes" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEditar('pendientes', 'lista-pendientes')">Cancelar</button>
-        <button class="boton-largo azul" onclick="confirmarEdicion('pendientes', 'lista-pendientes')">Confirmar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('pendientes', 'lista-pendientes')">Confirmar Edición</button>
     </div>
 
-    <!-- Controles Detalle (Apuntes) -->
     <div class="controles-flotantes" id="flotantes-detalle" style="display: none;">
         <button class="btn-cuadrado azul" onclick="abrirModalTexto()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 7V4h16v3M12 4v16M8 20h8"/></svg></button>
         <button class="btn-cuadrado azul" onclick="prepararImagen()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
@@ -167,6 +163,14 @@
         </div>
     </div>
 
+    <!-- REGISTRO DEL SERVICE WORKER (VITAL PARA INSTALAR LA APP) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(function() {
+                console.log("Service Worker registrado con éxito");
+            });
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

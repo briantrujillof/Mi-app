@@ -1,15 +1,16 @@
 {
-  "name": "HELP",
-  "short_name": "HELP",
-  "start_url": "./index.html",
+  "name": "App Académica",
+  "short_name": "App Académica",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0b192c",
-  "theme_color": "#0b192c",
+  "background_color": "#070b14",
+  "theme_color": "#070b14",
   "icons": [
     {
-      "src": "icono.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' rx='50' fill='%231e3a8a'/><path d='M80 64v128M176 64v128M80 128h96' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }

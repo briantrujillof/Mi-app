@@ -5,7 +5,6 @@ let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
 
-// === LÓGICA DE SWIPE ===
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
@@ -15,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     activarArrastrarYSoltar();
     cargarSaldosTarjetas();
     actualizarControles(); 
-    retrocompatibilidadPendientes(); // Para poder editar pendientes viejos
+    retrocompatibilidadPendientes();
 
     document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
     document.addEventListener('touchend', e => {
@@ -61,13 +60,12 @@ function cambiarPestana(idPestana) {
     actualizarControles();
 }
 
-// === CEREBRO MAESTRO DE BOTONES ===
 function actualizarControles() {
     document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
     const enDetalle = document.getElementById('pantalla-detalle').style.display === 'block';
     
     if (enDetalle) {
-        if (itemActual && itemActual.startsWith('historial_')) return;
+        if (itemActual && itemActual.startsWith('historial_')) return; 
         
         if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
             document.getElementById('confirmar-detalle').style.display = 'flex';
@@ -82,12 +80,10 @@ function actualizarControles() {
         if (pestanaActual === 'pendientes') listaAsociada = 'lista-pendientes';
         
         if (listaAsociada && document.getElementById(listaAsociada).classList.contains('modo-eliminar')) {
-            // Usa el confirmar normal de eliminar si aplica
             if (document.getElementById(`confirmar-${pestanaActual}`)) {
                 document.getElementById(`confirmar-${pestanaActual}`).style.display = 'flex';
             }
         } else if (listaAsociada && document.getElementById(listaAsociada).classList.contains('modo-editar')) {
-            // Muestra confirmar edición
             if (document.getElementById(`confirmar-editar-${pestanaActual}`)) {
                 document.getElementById(`confirmar-editar-${pestanaActual}`).style.display = 'flex';
             }
@@ -99,7 +95,6 @@ function actualizarControles() {
     }
 }
 
-// === VERIFICACIONES ===
 function verificarContenidoPrincipal() {
     const listas = ['lista-cursos-universidad', 'lista-ciclos-ingles', 'lista-pendientes'];
     listas.forEach(id => {
@@ -124,7 +119,6 @@ function verificarContenidoDetalle() {
     }
 }
 
-// === ELIMINAR CURSOS/CICLOS ===
 function activarModoEliminar(pestañaID, listaID) {
     document.getElementById(listaID).classList.add('modo-eliminar');
     actualizarControles();
@@ -159,7 +153,6 @@ function borrarSeleccionadosPendientes() {
     }
 }
 
-// === MODO EDITAR NOMBRES (NUEVO) ===
 function activarModoEditar(pestañaID, listaID) {
     document.getElementById(listaID).classList.add('modo-editar');
     actualizarControles();
@@ -169,24 +162,20 @@ function cancelarModoEditar(pestañaID, listaID) {
     actualizarControles();
 }
 function confirmarEdicion(pestañaID, listaID) {
-    // Los cambios se guardan al instante con el prompt, confirmar solo cierra el modo
     cancelarModoEditar(pestañaID, listaID);
 }
 
-// Función maestra para renombrar y mover los apuntes seguros
 function renombrarCursoCiclo(nombreActual, pestanaActual) {
     let nuevoNombre = prompt("Editar nombre:", nombreActual);
     if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
         nuevoNombre = nuevoNombre.trim();
         
-        // Mover apuntes e imágenes internos a la nueva carpeta invisible
         let data = localStorage.getItem('contenido_' + nombreActual);
         if (data) {
             localStorage.setItem('contenido_' + nuevoNombre, data);
             localStorage.removeItem('contenido_' + nombreActual);
         }
 
-        // Actualizar lo visual
         let listaID = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
         let spans = document.getElementById(listaID).querySelectorAll('span');
         spans.forEach(span => {
@@ -211,14 +200,12 @@ function editarPendiente(spanElement) {
     }
 }
 
-// === INTERCEPTAR ABRIR DETALLE PARA MODO EDICIÓN ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     
     const pestanaActual = vistas[vistaActualIndex];
     let listaAsociada = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
     
-    // Si estamos en modo editar, abrir el prompt de renombre en lugar del curso
     if (document.getElementById(listaAsociada).classList.contains('modo-editar')) {
         renombrarCursoCiclo(nombreItem, pestanaActual);
         return;
@@ -283,7 +270,6 @@ window.addEventListener('popstate', function() {
     }
 });
 
-// === AGREGAR ITEMS ===
 function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemLista('lista-cursos-universidad', n); guardarDatos(); } }
 function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemLista('lista-ciclos-ingles', n); guardarDatos(); } }
 function agregarPendiente() { let n = prompt("Nuevo pendiente:"); if (n) { agregarItemLista('lista-pendientes', n); guardarDatos(); } }
@@ -316,7 +302,6 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === HISTORIAL DE TARJETAS TIPO YAPE CON LIMPIEZA 30 DÍAS ===
 function registrarMovimiento(tipo, monto, desc) {
     let movs = JSON.parse(localStorage.getItem('movs_' + tipo) || '[]');
     let ahora = new Date();
@@ -397,7 +382,6 @@ function descontarPasaje(tipo, costo) {
     } else { alert("Saldo insuficiente."); }
 }
 
-// === MODO ELIMINAR DETALLE ===
 function activarModoEliminarDetalle() {
     document.getElementById('contenido-detalle').classList.add('modo-eliminar');
     actualizarControles();
@@ -510,9 +494,10 @@ async function subirImagenACloudinary(dataUrl) {
     return data.secure_url;
 }
 
+// === SORTABLEJS OPTIMIZADO PARA MÓVILES ===
 function activarArrastrarYSoltar() {
     const opc = { 
-        animation: 150, 
+        animation: 250, 
         delay: 200, 
         delayOnTouchOnly: true, 
         fallbackTolerance: 5,
@@ -526,7 +511,7 @@ function activarArrastrarYSoltar() {
     new Sortable(document.getElementById('lista-ciclos-ingles'), opc);
     new Sortable(document.getElementById('lista-pendientes'), opc);
     new Sortable(document.getElementById('contenido-detalle'), { 
-        animation: 150, 
+        animation: 250, 
         delay: 200, 
         delayOnTouchOnly: true, 
         fallbackTolerance: 5,
