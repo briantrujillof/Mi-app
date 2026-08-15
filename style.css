@@ -49,20 +49,14 @@ html, body {
 .header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
 #titulo-detalle { font-size: 22px; font-weight: 700; margin: 0; color: white;}
 
-/* === ESTRUCTURA DE LOS BLOQUES (CON BLOQUEO DE SELECCIÓN DE TEXTO) === */
+/* === ESTRUCTURA DE LOS BLOQUES === */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
 
 .item-lista, .bloque-detalle { 
-    background: var(--card); 
-    border-radius: 12px; 
-    border: 1px solid var(--border); 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
-    /* Bloqueo de selección para arrastrar sin problemas */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
+    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+    transition: transform 0.2s, border 0.2s;
 }
 
 .item-lista { padding: 18px 15px; display: flex; align-items: center; gap: 15px; }
@@ -73,15 +67,18 @@ html, body {
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
 .texto-detalle { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word; }
 
-/* === CLASES PARA LA ANIMACIÓN DE ARRASTRAR (ESTILO ORIGINAL) === */
+/* SortableJS Classes */
 .sortable-ghost { opacity: 0.3; }
 .sortable-drag { cursor: grabbing !important; background: var(--bg) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.6) !important; }
 
-/* Modo Eliminar */
+/* === MODO ELIMINAR / EDITAR === */
 .lista-estricta .casilla-seleccion, .lista-estricta .casilla-seleccion-detalle { display: none; }
 .lista-estricta.modo-eliminar .casilla-seleccion, .lista-estricta.modo-eliminar .casilla-seleccion-detalle { display: inline-block; margin-right: 12px; animation: soloFadeIn 0.2s;}
 .lista-estricta.modo-eliminar .item-lista, .lista-estricta.modo-eliminar .bloque-detalle { border: 1px solid var(--red-dark); }
 input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; flex-shrink: 0;}
+
+/* Resaltado del Modo Editar */
+.contenedor-lista.modo-editar .item-lista { border: 1px dashed #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
 
 /* Mensajes Vacíos */
 .vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px;}
@@ -93,16 +90,23 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .linea-roja { display: inline-block; width: 30px; height: 4px; background: #ef4444; border-radius: 2px;}
 .linea-verde { display: inline-block; width: 30px; height: 4px; background: #10b981; border-radius: 2px;}
 .tarjeta-saldo { font-size: 32px; font-weight: 700; margin-bottom: 10px; }
-.btn-texto-azul { background: transparent; border: none; color: #3b82f6; font-size: 15px; font-weight: 600; margin-bottom: 20px; cursor: pointer;}
+.btn-texto-azul { width: 100%; background: transparent; border: 1px solid var(--blue-dark); color: #3b82f6; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;}
 .btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s;}
 .btn-viaje:active { transform: scale(0.97); }
 
-/* === COLORES UNIVERSALES FUERTES (Resuelve el botón blanco) === */
+/* Historial Yape */
+.movimiento-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 20px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.mov-info { display: flex; flex-direction: column; gap: 2px; }
+.mov-fecha { font-size: 12px; color: var(--muted); }
+.mov-monto { font-weight: 700; font-size: 18px; }
+.color-positivo { color: #10b981; }
+.color-negativo { color: #ef4444; }
+
+/* === COLORES Y BOTONES === */
 .azul { background-color: var(--blue-dark) !important; color: white !important; }
 .rojo { background-color: var(--red-dark) !important; color: white !important; }
 .transparente { background: transparent !important; border: 1px solid var(--muted); color: var(--text) !important; }
 
-/* Controles Flotantes y SVG */
 .controles-flotantes { position: fixed; bottom: 25px; right: 20px; flex-direction: column; gap: 12px; z-index: 999; }
 .btn-cuadrado { 
     width: 55px; height: 55px; border-radius: 12px; border: none; 
@@ -113,8 +117,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .btn-cuadrado:active { transform: scale(0.9); }
 .btn-cuadrado svg { width: 24px; height: 24px; color: white; }
 
-/* Controles Confirmar */
-.controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; gap: 10px; z-index: 999; animation: fadeInUp 0.3s forwards; }
+.controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 999; animation: fadeInUp 0.3s forwards; }
 .boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
 
 /* Modales */
@@ -125,4 +128,5 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 textarea.input-moderno { resize: none; }
 .botones-modal { display: flex; justify-content: flex-end; gap: 10px; }
 .botones-modal button { padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
+.btn-modal-cancelar { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
 .footer-recorte { padding: 15px; background: #000; display: flex; justify-content: space-between; gap: 10px; width: 100%;}

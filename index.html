@@ -23,7 +23,6 @@
 
     <!-- PANTALLA PRINCIPAL -->
     <main id="pantalla-principal" class="pantalla">
-        
         <section id="universidad" class="pestana activa">
             <div class="header-seccion">
                 <svg class="logo-seccion-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -57,20 +56,26 @@
                 <div class="tarjeta-transporte">
                     <div class="tarjeta-header"><span class="linea-roja"></span> Corredor</div>
                     <div class="tarjeta-saldo">S/ <span id="saldo-corredor">10.00</span></div>
-                    <button class="btn-texto-azul" onclick="agregarSaldo('corredor')">+ Agregar Saldo</button>
-                    <button class="btn-viaje" onclick="descontarPasaje('corredor', 1.21)">🚌 Viaje (S/ 1.21)</button>
+                    <button class="btn-viaje" style="margin-bottom: 15px;" onclick="abrirHistorial('corredor')">Ver Movimientos</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-texto-azul" onclick="agregarSaldo('corredor')">+ Recarga</button>
+                        <button class="btn-viaje" onclick="descontarPasaje('corredor', 1.21)">🚌 Viaje (-1.21)</button>
+                    </div>
                 </div>
                 <div class="tarjeta-transporte">
                     <div class="tarjeta-header"><span class="linea-verde"></span> Tren Eléctrico</div>
                     <div class="tarjeta-saldo">S/ <span id="saldo-tren">5.00</span></div>
-                    <button class="btn-texto-azul" onclick="agregarSaldo('tren')">+ Agregar Saldo</button>
-                    <button class="btn-viaje" onclick="descontarPasaje('tren', 0.75)">🚆 Viaje (S/ 0.75)</button>
+                    <button class="btn-viaje" style="margin-bottom: 15px;" onclick="abrirHistorial('tren')">Ver Movimientos</button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-texto-azul" onclick="agregarSaldo('tren')">+ Recarga</button>
+                        <button class="btn-viaje" onclick="descontarPasaje('tren', 0.75)">🚆 Viaje (-0.75)</button>
+                    </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- PANTALLA DETALLE (APUNTES) -->
+    <!-- PANTALLA DETALLE (APUNTES O HISTORIAL) -->
     <main id="pantalla-detalle" class="pantalla" style="display: none;">
         <div class="header-detalle">
             <h2 id="titulo-detalle"></h2>
@@ -79,32 +84,53 @@
         <input type="file" id="input-imagen" accept="image/*" style="display: none;" onchange="cargarImagen(event)">
     </main>
 
-    <!-- CONTROLES FLOTANTES GLOBALES -->
+    <!-- ========================================================= -->
+    <!-- CONTROLES FLOTANTES GLOBALES Y CONFIRMACIONES -->
+    <!-- ========================================================= -->
     
     <!-- Controles Universidad -->
     <div class="controles-flotantes" id="flotantes-universidad" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarCurso()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="btn-cuadrado azul" onclick="activarModoEditar('universidad', 'lista-cursos-universidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
         <button class="btn-cuadrado rojo" onclick="activarModoEliminar('universidad', 'lista-cursos-universidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
     </div>
+    <!-- Confirmar Eliminar -->
     <div class="controles-confirmar" id="confirmar-universidad" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEliminar('universidad', 'lista-cursos-universidad')">Cancelar</button>
         <button class="boton-largo rojo" onclick="confirmarEliminacion('universidad', 'lista-cursos-universidad')">Eliminar Cursos</button>
+    </div>
+    <!-- Confirmar Editar -->
+    <div class="controles-confirmar" id="confirmar-editar-universidad" style="display: none;">
+        <button class="boton-largo transparente" onclick="cancelarModoEditar('universidad', 'lista-cursos-universidad')">Cancelar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('universidad', 'lista-cursos-universidad')">Confirmar</button>
     </div>
 
     <!-- Controles Inglés -->
     <div class="controles-flotantes" id="flotantes-ingles" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarCiclo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="btn-cuadrado azul" onclick="activarModoEditar('ingles', 'lista-ciclos-ingles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
         <button class="btn-cuadrado rojo" onclick="activarModoEliminar('ingles', 'lista-ciclos-ingles')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
     </div>
+    <!-- Confirmar Eliminar -->
     <div class="controles-confirmar" id="confirmar-ingles" style="display: none;">
         <button class="boton-largo transparente" onclick="cancelarModoEliminar('ingles', 'lista-ciclos-ingles')">Cancelar</button>
         <button class="boton-largo rojo" onclick="confirmarEliminacion('ingles', 'lista-ciclos-ingles')">Eliminar Ciclos</button>
+    </div>
+    <!-- Confirmar Editar -->
+    <div class="controles-confirmar" id="confirmar-editar-ingles" style="display: none;">
+        <button class="boton-largo transparente" onclick="cancelarModoEditar('ingles', 'lista-ciclos-ingles')">Cancelar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('ingles', 'lista-ciclos-ingles')">Confirmar</button>
     </div>
 
     <!-- Controles Pendientes -->
     <div class="controles-flotantes" id="flotantes-pendientes" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarPendiente()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="btn-cuadrado azul" onclick="activarModoEditar('pendientes', 'lista-pendientes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
         <button class="btn-cuadrado rojo" onclick="borrarSeleccionadosPendientes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg></button>
+    </div>
+    <div class="controles-confirmar" id="confirmar-editar-pendientes" style="display: none;">
+        <button class="boton-largo transparente" onclick="cancelarModoEditar('pendientes', 'lista-pendientes')">Cancelar</button>
+        <button class="boton-largo azul" onclick="confirmarEdicion('pendientes', 'lista-pendientes')">Confirmar</button>
     </div>
 
     <!-- Controles Detalle (Apuntes) -->
