@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Académica</title>
     
-    <!-- Configuración PWA (Para que sea una App real) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#070b14">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><rect width='256' height='256' rx='50' fill='%231e3a8a'/><path d='M80 64v128M176 64v128M80 128h96' stroke='white' stroke-width='36' stroke-linecap='round' stroke-linejoin='round'/></svg>">
@@ -25,7 +24,6 @@
         <button class="btn-nav" onclick="cambiarPestana('tarjetas')">Tarjetas</button>
     </nav>
 
-    <!-- PANTALLA PRINCIPAL -->
     <main id="pantalla-principal" class="pantalla">
         <section id="universidad" class="pestana activa">
             <div class="header-seccion">
@@ -79,7 +77,6 @@
         </section>
     </main>
 
-    <!-- PANTALLA DETALLE (APUNTES E HISTORIAL) -->
     <main id="pantalla-detalle" class="pantalla" style="display: none;">
         <div class="header-detalle">
             <h2 id="titulo-detalle"></h2>
@@ -88,10 +85,13 @@
         <input type="file" id="input-imagen" accept="image/*" style="display: none;" onchange="cargarImagen(event)">
     </main>
 
-    <!-- ========================================================= -->
-    <!-- CONTROLES FLOTANTES Y DE CONFIRMACIÓN                     -->
-    <!-- ========================================================= -->
-    
+    <main id="pantalla-lectura" class="pantalla" style="display: none;">
+        <div class="header-detalle">
+            <h2 id="titulo-lectura"></h2>
+        </div>
+        <div id="contenido-lectura"></div>
+    </main>
+
     <div class="controles-flotantes" id="flotantes-universidad" style="display: none;">
         <button class="btn-cuadrado azul" onclick="agregarCurso()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
         <button class="btn-cuadrado azul" onclick="activarModoEditar('universidad', 'lista-cursos-universidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
@@ -140,7 +140,6 @@
         <button class="boton-largo rojo" onclick="confirmarEliminacionDetalle()">Eliminar Apuntes</button>
     </div>
 
-    <!-- MODALES -->
     <div id="modal-texto" class="modal-overlay" style="display:none;">
         <div class="modal-caja">
             <h3>Agregar Apunte</h3>
@@ -163,7 +162,6 @@
         </div>
     </div>
 
-    <!-- REGISTRO DEL SERVICE WORKER (VITAL PARA INSTALAR LA APP) -->
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').then(function() {

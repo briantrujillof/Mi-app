@@ -1,28 +1,16 @@
-/* Paleta Oscura Minimalista */
 :root {
-    --bg: #070b14;
-    --card: #111827;
-    --text: #f8fafc;
-    --muted: #64748b;
-    --blue-dark: #1e3a8a; 
-    --red-dark: #7f1d1d;  
-    --border: #1f2937;
+    --bg: #070b14; --card: #111827; --text: #f8fafc; --muted: #64748b; 
+    --blue-dark: #1e3a8a; --red-dark: #7f1d1d; --border: #1f2937;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-/* Evitar scroll horizontal y configurar base */
 html, body { 
-    background-color: var(--bg); 
-    color: var(--text); 
-    padding-bottom: 90px; 
-    overflow-x: hidden; 
-    width: 100vw; 
-    max-width: 100%; 
-    position: relative; 
+    background-color: var(--bg); color: var(--text); padding-bottom: 90px; 
+    overflow-x: hidden; width: 100vw; max-width: 100%; position: relative; 
 }
 
-/* === ANIMACIONES DE PANTALLA === */
+/* === ANIMACIONES === */
 .pantalla { width: 100%; min-height: 100vh;}
 .slide-in { animation: slideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .slide-out { animation: slideOut 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
@@ -36,29 +24,27 @@ html, body {
 @keyframes fadeOut { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
 @keyframes soloFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* Navegación y Pestañas */
+/* Navegación y Cabeceras */
 .barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
 .btn-nav { background: transparent; border: none; color: var(--muted); font-size: 15px; font-weight: 500; cursor: pointer; padding-bottom: 5px; transition: color 0.3s ease;}
 .btn-nav.activo { color: var(--text); border-bottom: 2px solid #3b82f6; font-weight: 600; }
 .pestana { display: none; padding: 0 15px; animation: fadeInUp 0.3s ease; }
 .pestana.activa { display: block; }
 
-/* Cabeceras */
 .header-seccion { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .titulo-seccion { font-size: 24px; font-weight: 700; letter-spacing: -0.5px;}
 .logo-seccion-svg { width: 28px; height: 28px; color: #60a5fa; } 
 .header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
-#titulo-detalle { font-size: 22px; font-weight: 700; margin: 0; color: white;}
+#titulo-detalle, #titulo-lectura { font-size: 22px; font-weight: 700; margin: 0; color: white;}
 
-/* === ESTRUCTURA DE LOS BLOQUES === */
-/* Solución del Bug de Arrastre: Quitamos el 'transition: transform' de aquí para no pelear con SortableJS */
+/* === ESTRUCTURA DE BLOQUES === */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
 
 .item-lista, .bloque-detalle { 
     background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-    transition: border 0.2s, background-color 0.2s; /* Solo transiciones de color, no de movimiento */
+    transition: border 0.2s, background-color 0.2s; /* Arreglado para que no buguee SortableJS */
 }
 
 .item-lista { padding: 18px 15px; display: flex; align-items: center; gap: 15px; }
@@ -67,20 +53,28 @@ html, body {
 .bloque-detalle { padding: 22px 20px; }
 .bloque-detalle h4 { margin-bottom: 8px; font-size: 18px; color: #60a5fa; font-weight: 600;}
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
-.texto-detalle { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word; }
 
-/* === SORTABLEJS CLASES (El motor de arrastre) === */
+/* REGLA MÁGICA: Cortar texto largo a 4 líneas en la vista general */
+#contenido-detalle .texto-detalle {
+    font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Vista Pantalla Completa del Apunte */
+#contenido-lectura { padding: 5px 20px 40px 20px; }
+#contenido-lectura .texto-detalle { display: block; font-size: 16px; line-height: 1.8; color: #e2e8f0; word-wrap: break-word; white-space: pre-wrap; margin-top: 10px;}
+#contenido-lectura img { width: 100%; border-radius: 8px; margin-top: 15px; }
+
+/* === SORTABLEJS === */
 .sortable-ghost { opacity: 0.3; }
 .sortable-drag { cursor: grabbing !important; background: var(--bg) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.6) !important; }
 
-/* === MODO ELIMINAR Y EDITAR === */
+/* MODO ELIMINAR / EDITAR */
 .lista-estricta .casilla-seleccion, .lista-estricta .casilla-seleccion-detalle { display: none; }
 .lista-estricta.modo-eliminar .casilla-seleccion, .lista-estricta.modo-eliminar .casilla-seleccion-detalle { display: inline-block; margin-right: 12px; animation: soloFadeIn 0.2s;}
 .lista-estricta.modo-eliminar .item-lista, .lista-estricta.modo-eliminar .bloque-detalle { border: 1px solid var(--red-dark); }
-input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; flex-shrink: 0;}
-
-/* Resaltado del Modo Editar */
 .contenedor-lista.modo-editar .item-lista { border: 1px dashed #3b82f6; background-color: rgba(59, 130, 246, 0.05); }
+input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dark); cursor: pointer; flex-shrink: 0;}
 
 /* Mensajes Vacíos */
 .vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px;}
@@ -104,18 +98,13 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .color-positivo { color: #10b981; }
 .color-negativo { color: #ef4444; }
 
-/* === COLORES Y BOTONES SVG === */
+/* === COLORES Y BOTONES === */
 .azul { background-color: var(--blue-dark) !important; color: white !important; }
 .rojo { background-color: var(--red-dark) !important; color: white !important; }
 .transparente { background: transparent !important; border: 1px solid var(--muted); color: var(--text) !important; }
 
 .controles-flotantes { position: fixed; bottom: 25px; right: 20px; flex-direction: column; gap: 12px; z-index: 999; }
-.btn-cuadrado { 
-    width: 55px; height: 55px; border-radius: 12px; border: none; 
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer;
-    transition: transform 0.1s ease; 
-}
+.btn-cuadrado { width: 55px; height: 55px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.1s ease; }
 .btn-cuadrado:active { transform: scale(0.9); }
 .btn-cuadrado svg { width: 24px; height: 24px; color: white; }
 

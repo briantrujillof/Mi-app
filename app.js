@@ -30,9 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function retrocompatibilidadPendientes() {
     document.querySelectorAll('#lista-pendientes span').forEach(span => {
-        if (!span.hasAttribute('onclick')) {
-            span.setAttribute('onclick', `editarPendiente(this)`);
-        }
+        if (!span.hasAttribute('onclick')) { span.setAttribute('onclick', `editarPendiente(this)`); }
     });
 }
 
@@ -53,8 +51,7 @@ function cambiarPestana(idPestana) {
     if(botonesNav[vistaActualIndex]) botonesNav[vistaActualIndex].classList.add('activo');
     
     document.querySelectorAll('.lista-estricta, .contenedor-lista').forEach(el => {
-        el.classList.remove('modo-eliminar');
-        el.classList.remove('modo-editar');
+        el.classList.remove('modo-eliminar'); el.classList.remove('modo-editar');
         el.querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
     });
     actualizarControles();
@@ -80,17 +77,11 @@ function actualizarControles() {
         if (pestanaActual === 'pendientes') listaAsociada = 'lista-pendientes';
         
         if (listaAsociada && document.getElementById(listaAsociada).classList.contains('modo-eliminar')) {
-            if (document.getElementById(`confirmar-${pestanaActual}`)) {
-                document.getElementById(`confirmar-${pestanaActual}`).style.display = 'flex';
-            }
+            if (document.getElementById(`confirmar-${pestanaActual}`)) document.getElementById(`confirmar-${pestanaActual}`).style.display = 'flex';
         } else if (listaAsociada && document.getElementById(listaAsociada).classList.contains('modo-editar')) {
-            if (document.getElementById(`confirmar-editar-${pestanaActual}`)) {
-                document.getElementById(`confirmar-editar-${pestanaActual}`).style.display = 'flex';
-            }
+            if (document.getElementById(`confirmar-editar-${pestanaActual}`)) document.getElementById(`confirmar-editar-${pestanaActual}`).style.display = 'flex';
         } else {
-            if (document.getElementById(`flotantes-${pestanaActual}`)) {
-                document.getElementById(`flotantes-${pestanaActual}`).style.display = 'flex';
-            }
+            if (document.getElementById(`flotantes-${pestanaActual}`)) document.getElementById(`flotantes-${pestanaActual}`).style.display = 'flex';
         }
     }
 }
@@ -102,9 +93,8 @@ function verificarContenidoPrincipal() {
         if (!lista) return;
         let msg = lista.querySelector('.vacio-msg-principal');
         let itemsCount = lista.querySelectorAll('.item-lista').length;
-        if (itemsCount === 0 && !msg) {
-            lista.innerHTML = '<div class="vacio-msg-principal fade-in-up">Sin contenido por el momento. Usa el botón (+) para agregar.</div>';
-        } else if (itemsCount > 0 && msg) msg.remove();
+        if (itemsCount === 0 && !msg) { lista.innerHTML = '<div class="vacio-msg-principal fade-in-up">Sin contenido por el momento. Usa el botón (+) para agregar.</div>'; } 
+        else if (itemsCount > 0 && msg) msg.remove();
     });
 }
 
@@ -112,78 +102,39 @@ function verificarContenidoDetalle() {
     if (itemActual && itemActual.startsWith('historial_')) return;
     let contenedor = document.getElementById('contenido-detalle');
     let mensaje = contenedor.querySelector('.vacio-msg');
-    if (contenedor.children.length === 0 && !mensaje) {
-        contenedor.innerHTML = '<div class="vacio-msg fade-in-up">Apuntes vacíos. Usa los botones inferiores.</div>';
-    } else if (contenedor.children.length > 1 && mensaje) {
-        mensaje.remove();
-    }
+    if (contenedor.children.length === 0 && !mensaje) { contenedor.innerHTML = '<div class="vacio-msg fade-in-up">Apuntes vacíos. Usa los botones inferiores.</div>'; } 
+    else if (contenedor.children.length > 1 && mensaje) { mensaje.remove(); }
 }
 
-function activarModoEliminar(pestañaID, listaID) {
-    document.getElementById(listaID).classList.add('modo-eliminar');
-    actualizarControles();
-}
-function cancelarModoEliminar(pestañaID, listaID) {
-    document.getElementById(listaID).classList.remove('modo-eliminar');
-    document.getElementById(listaID).querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false);
-    actualizarControles();
-}
+function activarModoEliminar(pestañaID, listaID) { document.getElementById(listaID).classList.add('modo-eliminar'); actualizarControles(); }
+function cancelarModoEliminar(pestañaID, listaID) { document.getElementById(listaID).classList.remove('modo-eliminar'); document.getElementById(listaID).querySelectorAll('.casilla-seleccion').forEach(c => c.checked = false); actualizarControles(); }
 function confirmarEliminacion(pestañaID, listaID) {
     let seleccionados = document.getElementById(listaID).querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length === 0) { cancelarModoEliminar(pestañaID, listaID); return; }
-    
-    seleccionados.forEach(c => {
-        let item = c.closest('.item-lista');
-        item.classList.remove('fade-in-up');
-        item.classList.add('fade-out');
-        setTimeout(() => item.remove(), 290);
-    });
+    seleccionados.forEach(c => { let item = c.closest('.item-lista'); item.classList.remove('fade-in-up'); item.classList.add('fade-out'); setTimeout(() => item.remove(), 290); });
     setTimeout(() => { guardarDatos(); verificarContenidoPrincipal(); cancelarModoEliminar(pestañaID, listaID); }, 300);
 }
 function borrarSeleccionadosPendientes() {
     let seleccionados = document.getElementById('lista-pendientes').querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length > 0 && confirm("¿Eliminar los pendientes seleccionados?")) {
-        seleccionados.forEach(c => {
-            let item = c.closest('.item-lista');
-            item.classList.remove('fade-in-up');
-            item.classList.add('fade-out');
-            setTimeout(() => item.remove(), 290);
-        });
+        seleccionados.forEach(c => { let item = c.closest('.item-lista'); item.classList.remove('fade-in-up'); item.classList.add('fade-out'); setTimeout(() => item.remove(), 290); });
         setTimeout(() => { guardarDatos(); verificarContenidoPrincipal(); }, 300);
     }
 }
 
-function activarModoEditar(pestañaID, listaID) {
-    document.getElementById(listaID).classList.add('modo-editar');
-    actualizarControles();
-}
-function cancelarModoEditar(pestañaID, listaID) {
-    document.getElementById(listaID).classList.remove('modo-editar');
-    actualizarControles();
-}
-function confirmarEdicion(pestañaID, listaID) {
-    cancelarModoEditar(pestañaID, listaID);
-}
+function activarModoEditar(pestañaID, listaID) { document.getElementById(listaID).classList.add('modo-editar'); actualizarControles(); }
+function cancelarModoEditar(pestañaID, listaID) { document.getElementById(listaID).classList.remove('modo-editar'); actualizarControles(); }
+function confirmarEdicion(pestañaID, listaID) { cancelarModoEditar(pestañaID, listaID); }
 
 function renombrarCursoCiclo(nombreActual, pestanaActual) {
     let nuevoNombre = prompt("Editar nombre:", nombreActual);
     if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
         nuevoNombre = nuevoNombre.trim();
-        
         let data = localStorage.getItem('contenido_' + nombreActual);
-        if (data) {
-            localStorage.setItem('contenido_' + nuevoNombre, data);
-            localStorage.removeItem('contenido_' + nombreActual);
-        }
-
+        if (data) { localStorage.setItem('contenido_' + nuevoNombre, data); localStorage.removeItem('contenido_' + nombreActual); }
         let listaID = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
         let spans = document.getElementById(listaID).querySelectorAll('span');
-        spans.forEach(span => {
-            if (span.innerText === nombreActual) {
-                span.innerText = nuevoNombre;
-                span.setAttribute('onclick', `abrirDetalle('${nuevoNombre}')`);
-            }
-        });
+        spans.forEach(span => { if (span.innerText === nombreActual) { span.innerText = nuevoNombre; span.setAttribute('onclick', `abrirDetalle('${nuevoNombre}')`); } });
         guardarDatos();
     }
 }
@@ -193,53 +144,97 @@ function editarPendiente(spanElement) {
     if (lista && lista.classList.contains('modo-editar')) {
         let nombreActual = spanElement.innerText;
         let nuevoNombre = prompt("Editar pendiente:", nombreActual);
-        if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
-            spanElement.innerText = nuevoNombre.trim();
-            guardarDatos();
-        }
+        if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) { spanElement.innerText = nuevoNombre.trim(); guardarDatos(); }
     }
 }
 
+// === NAVEGACIÓN ENTRE PANTALLAS Y MODO LECTURA ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     
     const pestanaActual = vistas[vistaActualIndex];
     let listaAsociada = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
     
-    if (document.getElementById(listaAsociada).classList.contains('modo-editar')) {
-        renombrarCursoCiclo(nombreItem, pestanaActual);
-        return;
-    }
-
+    if (document.getElementById(listaAsociada).classList.contains('modo-editar')) { renombrarCursoCiclo(nombreItem, pestanaActual); return; }
     if (document.getElementById(listaAsociada).classList.contains('modo-eliminar')) return;
 
     itemActual = nombreItem;
     window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
     
-    const main = document.getElementById('pantalla-principal');
-    const nav = document.getElementById('nav-principal');
-    const detalle = document.getElementById('pantalla-detalle');
-
-    main.style.display = 'none';
-    nav.style.display = 'none';
+    document.getElementById('pantalla-principal').style.display = 'none';
+    document.getElementById('nav-principal').style.display = 'none';
     
     document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
     document.getElementById('flotantes-detalle').style.display = 'flex';
 
+    let detalle = document.getElementById('pantalla-detalle');
     detalle.style.display = 'block';
     detalle.classList.remove('slide-out');
     detalle.classList.add('slide-in');
 
     document.getElementById('titulo-detalle').innerText = nombreItem;
     document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
+    
+    // Convertir apuntes viejos a clickeables (Pantalla de Lectura Completa)
+    document.querySelectorAll('#contenido-detalle .bloque-detalle').forEach(bloque => {
+        let divContenido = bloque.querySelector('div[style*="width: 100%"]');
+        if(divContenido && !divContenido.hasAttribute('onclick')) {
+            divContenido.setAttribute('onclick', 'abrirLectura(this)');
+            divContenido.style.cursor = 'pointer';
+        }
+    });
+
     verificarContenidoDetalle();
 }
 
+function abrirLectura(elemento) {
+    if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) return;
+    
+    let clon = elemento.cloneNode(true);
+    clon.removeAttribute('onclick');
+    clon.style.cursor = 'default';
+    
+    let h4 = clon.querySelector('h4');
+    let titulo = h4 && h4.innerText.trim() !== '' ? h4.innerText : "Apunte";
+    if(h4) h4.remove(); // Quitamos el titulo interno porque irá al header grande
+    
+    window.history.pushState({ pantalla: 'lectura' }, "", "#lectura");
+    
+    document.getElementById('pantalla-detalle').style.display = 'none';
+    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
+    
+    let pantallaLectura = document.getElementById('pantalla-lectura');
+    pantallaLectura.style.display = 'block';
+    pantallaLectura.classList.remove('slide-out');
+    pantallaLectura.classList.add('slide-in');
+    
+    document.getElementById('titulo-lectura').innerText = titulo;
+    document.getElementById('contenido-lectura').innerHTML = '';
+    document.getElementById('contenido-lectura').appendChild(clon);
+}
+
+// Retroceder Seguro (Botón atrás de Android/iPhone)
 window.addEventListener('popstate', function() {
-    if (window.location.hash !== '#detalle') {
-        const main = document.getElementById('pantalla-principal');
-        const nav = document.getElementById('nav-principal');
-        const detalle = document.getElementById('pantalla-detalle');
+    const hash = window.location.hash;
+    const main = document.getElementById('pantalla-principal');
+    const nav = document.getElementById('nav-principal');
+    const detalle = document.getElementById('pantalla-detalle');
+    const lectura = document.getElementById('pantalla-lectura');
+    
+    if (hash === '#detalle') {
+        // Regresa de Lectura a Detalle de Curso
+        if (lectura.style.display === 'block') {
+            lectura.classList.remove('slide-in');
+            lectura.classList.add('slide-out');
+            setTimeout(() => {
+                lectura.style.display = 'none';
+                detalle.style.display = 'block';
+                actualizarControles();
+            }, 290);
+        }
+    } else if (hash === '' || hash === '#') {
+        // Regresa al Menú Principal
+        if (lectura.style.display === 'block') lectura.style.display = 'none';
         
         if(document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
             document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
@@ -248,21 +243,14 @@ window.addEventListener('popstate', function() {
         
         detalle.classList.remove('slide-in');
         detalle.classList.add('slide-out');
-        
-        document.getElementById('flotantes-detalle').style.display = 'none';
-        document.getElementById('confirmar-detalle').style.display = 'none';
+        document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
         
         setTimeout(() => {
             detalle.style.display = 'none';
             nav.style.display = 'flex';
             main.style.display = 'block';
-            
             main.classList.add('fade-in-up');
             setTimeout(() => main.classList.remove('fade-in-up'), 300);
-
-            document.getElementById('modal-recorte').style.display = 'none';
-            document.getElementById('modal-texto').style.display = 'none';
-            if(cropper) { cropper.destroy(); cropper = null; }
             
             itemActual = "";
             actualizarControles(); 
@@ -277,10 +265,8 @@ function agregarPendiente() { let n = prompt("Nuevo pendiente:"); if (n) { agreg
 function agregarItemLista(idLista, nombre) {
     let ul = document.getElementById(idLista);
     if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
-
     let li = document.createElement('div');
     li.className = 'item-lista fade-in-up'; 
-    
     if (idLista === 'lista-pendientes') {
         li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span onclick="editarPendiente(this)" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
     } else {
@@ -306,7 +292,6 @@ function registrarMovimiento(tipo, monto, desc) {
     let movs = JSON.parse(localStorage.getItem('movs_' + tipo) || '[]');
     let ahora = new Date();
     movs.push({ monto: monto, desc: desc, timestamp: ahora.getTime(), fecha: ahora.toLocaleString() });
-    
     const treintaDiasEnMs = 30 * 24 * 60 * 60 * 1000;
     let movsLimpios = movs.filter(m => (ahora.getTime() - m.timestamp) < treintaDiasEnMs);
     localStorage.setItem('movs_' + tipo, JSON.stringify(movsLimpios));
@@ -315,13 +300,10 @@ function registrarMovimiento(tipo, monto, desc) {
 function abrirHistorial(tipo) {
     itemActual = "historial_" + tipo;
     window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
-    
     const main = document.getElementById('pantalla-principal');
     const nav = document.getElementById('nav-principal');
     const detalle = document.getElementById('pantalla-detalle');
-
-    main.style.display = 'none';
-    nav.style.display = 'none';
+    main.style.display = 'none'; nav.style.display = 'none';
     document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
 
     detalle.style.display = 'block';
@@ -338,19 +320,8 @@ function abrirHistorial(tipo) {
     localStorage.setItem('movs_' + tipo, JSON.stringify(movimientos));
 
     let html = movimientos.length > 0 ? '' : '<div class="vacio-msg fade-in-up">Sin movimientos recientes.</div>';
-    
     movimientos.reverse().forEach(m => {
-        html += `
-            <div class="movimiento-item fade-in-up">
-                <div class="mov-info">
-                    <span style="font-weight:600; color:white;">${m.desc}</span>
-                    <span class="mov-fecha">${m.fecha}</span>
-                </div>
-                <span class="mov-monto ${m.monto > 0 ? 'color-positivo' : 'color-negativo'}">
-                    ${m.monto > 0 ? '+' : ''}${m.monto.toFixed(2)}
-                </span>
-            </div>
-        `;
+        html += `<div class="movimiento-item fade-in-up"><div class="mov-info"><span style="font-weight:600; color:white;">${m.desc}</span><span class="mov-fecha">${m.fecha}</span></div><span class="mov-monto ${m.monto > 0 ? 'color-positivo' : 'color-negativo'}">${m.monto > 0 ? '+' : ''}${m.monto.toFixed(2)}</span></div>`;
     });
     document.getElementById('contenido-detalle').innerHTML = html;
 }
@@ -359,7 +330,6 @@ function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
 }
-
 function agregarSaldo(tipo) {
     let m = prompt("Monto a recargar:");
     if(m) {
@@ -372,7 +342,6 @@ function agregarSaldo(tipo) {
         }
     }
 }
-
 function descontarPasaje(tipo, costo) {
     let actual = parseFloat(localStorage.getItem('saldo_'+tipo) || (tipo==='corredor'?10:5));
     if(actual >= costo) {
@@ -382,36 +351,19 @@ function descontarPasaje(tipo, costo) {
     } else { alert("Saldo insuficiente."); }
 }
 
-function activarModoEliminarDetalle() {
-    document.getElementById('contenido-detalle').classList.add('modo-eliminar');
-    actualizarControles();
-}
-function cancelarModoEliminarDetalle() {
-    document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
-    document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
-    actualizarControles();
-}
+function activarModoEliminarDetalle() { document.getElementById('contenido-detalle').classList.add('modo-eliminar'); actualizarControles(); }
+function cancelarModoEliminarDetalle() { document.getElementById('contenido-detalle').classList.remove('modo-eliminar'); document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false); actualizarControles(); }
 function confirmarEliminacionDetalle() {
     let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
     if (seleccionados.length === 0) { cancelarModoEliminarDetalle(); return; }
-    
-    seleccionados.forEach(c => {
-        let bloque = c.closest('.bloque-detalle');
-        bloque.classList.remove('fade-in-up');
-        bloque.classList.add('fade-out');
-        setTimeout(() => bloque.remove(), 290);
-    });
-    setTimeout(() => {
-        guardarContenidoDetalle(); verificarContenidoDetalle(); cancelarModoEliminarDetalle();
-    }, 300);
+    seleccionados.forEach(c => { let bloque = c.closest('.bloque-detalle'); bloque.classList.remove('fade-in-up'); bloque.classList.add('fade-out'); setTimeout(() => bloque.remove(), 290); });
+    setTimeout(() => { guardarContenidoDetalle(); verificarContenidoDetalle(); cancelarModoEliminarDetalle(); }, 300);
 }
 
 function abrirModalTexto() {
     document.getElementById('input-caja-titulo').value = ""; document.getElementById('input-caja-texto').value = "";
     const modal = document.getElementById('modal-texto');
-    modal.style.display = 'flex';
-    modal.classList.add('solo-fade-in');
-    setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
+    modal.style.display = 'flex'; modal.classList.add('solo-fade-in'); setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
 }
 function cerrarModalTexto() { document.getElementById('modal-texto').style.display = 'none'; }
 
@@ -428,8 +380,8 @@ function guardarTextoDeCaja() {
         div.innerHTML = `
             <div style="display: flex; gap:10px; align-items:flex-start;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
-                <div style="width: 100%;">
-                    ${titulo ? `<h4>${titulo}</h4>` : ''}
+                <div style="width: 100%; cursor: pointer;" onclick="abrirLectura(this)">
+                    ${titulo ? `<h4>${titulo}</h4>` : '<h4 style="display:none;"></h4>'}
                     <p class="texto-detalle">${textoFormateado}</p>
                 </div>
             </div>
@@ -448,9 +400,7 @@ function cargarImagen(event) {
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
             const modal = document.getElementById('modal-recorte');
-            modal.style.display = 'flex';
-            modal.classList.add('solo-fade-in');
-            setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
+            modal.style.display = 'flex'; modal.classList.add('solo-fade-in'); setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
@@ -458,10 +408,7 @@ function cargarImagen(event) {
     }
     event.target.value = ""; 
 }
-function cancelarRecorte() {
-    document.getElementById('modal-recorte').style.display = 'none';
-    if(cropper) { cropper.destroy(); cropper = null; }
-}
+function cancelarRecorte() { document.getElementById('modal-recorte').style.display = 'none'; if(cropper) { cropper.destroy(); cropper = null; } }
 async function confirmarRecorte() {
     if(cropper) {
         document.getElementById('modal-recorte').style.display = 'none';
@@ -475,8 +422,8 @@ async function confirmarRecorte() {
         div.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px;">
                 <input type="checkbox" class="casilla-seleccion-detalle">
-                <div style="width: 100%;">
-                    <h4>${tituloImagenPendiente}</h4>
+                <div style="width: 100%; cursor: pointer;" onclick="abrirLectura(this)">
+                    ${tituloImagenPendiente ? `<h4>${tituloImagenPendiente}</h4>` : '<h4 style="display:none;"></h4>'}
                     <img src="${urlImagen}" class="imagen-galeria">
                 </div>
             </div>
@@ -487,38 +434,20 @@ async function confirmarRecorte() {
 }
 async function subirImagenACloudinary(dataUrl) {
     const formData = new FormData();
-    formData.append("file", dataUrl);
-    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("file", dataUrl); formData.append("upload_preset", UPLOAD_PRESET);
     const response = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-    const data = await response.json();
-    return data.secure_url;
+    const data = await response.json(); return data.secure_url;
 }
 
-// === SORTABLEJS OPTIMIZADO PARA MÓVILES ===
+// === SORTABLEJS (Fricción Arreglada) ===
 function activarArrastrarYSoltar() {
     const opc = { 
-        animation: 250, 
-        delay: 200, 
-        delayOnTouchOnly: true, 
-        fallbackTolerance: 5,
-        ghostClass: 'sortable-ghost',
-        dragClass: 'sortable-drag',
-        filter: 'input, button', 
-        preventOnFilter: false, 
-        onEnd: function() { guardarDatos(); } 
+        animation: 250, delay: 200, delayOnTouchOnly: true, fallbackTolerance: 5, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', filter: 'input, button', preventOnFilter: false, onEnd: function() { guardarDatos(); } 
     };
     new Sortable(document.getElementById('lista-cursos-universidad'), opc);
     new Sortable(document.getElementById('lista-ciclos-ingles'), opc);
     new Sortable(document.getElementById('lista-pendientes'), opc);
     new Sortable(document.getElementById('contenido-detalle'), { 
-        animation: 250, 
-        delay: 200, 
-        delayOnTouchOnly: true, 
-        fallbackTolerance: 5,
-        ghostClass: 'sortable-ghost',
-        dragClass: 'sortable-drag',
-        filter: 'input', 
-        preventOnFilter: false, 
-        onEnd: function() { guardarContenidoDetalle(); } 
+        animation: 250, delay: 200, delayOnTouchOnly: true, fallbackTolerance: 5, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', filter: 'input', preventOnFilter: false, onEnd: function() { guardarContenidoDetalle(); } 
     });
 }
