@@ -12,7 +12,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Habilitar caché offline de Firebase por si te quedas sin internet
+// Habilitar caché offline de Firebase
 db.enablePersistence().catch(err => console.log("Offline cache err:", err));
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/drbiwjcd/image/upload";
@@ -29,7 +29,7 @@ let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
-// === MANEJO DE SESIÓN Y NUBE (EL CORAZÓN DEL SISTEMA) ===
+// === MANEJO DE SESIÓN Y NUBE ===
 auth.onAuthStateChanged(user => {
     const pantallaCarga = document.getElementById('pantalla-carga');
     const pantallaLogin = document.getElementById('pantalla-login');
@@ -38,19 +38,16 @@ auth.onAuthStateChanged(user => {
 
     if (user) {
         currentUser = user;
-        // Usuario logueado: Descargar sus datos de la nube
+        // Descargar datos de la nube
         db.collection('usuarios').doc(user.uid).get().then(doc => {
-            if (doc.exists) {
-                // Si ya tiene datos en la nube, los sobreescribimos en el celular
+            if (doc.exists && Object.keys(doc.data()).length > 0) {
                 const data = doc.data();
                 localStorage.clear();
                 Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
             } else {
-                // Si es un usuario NUEVO, subimos lo que tuviera en su celular a la nube para no perderlo!
-                sincronizarConNube();
+                sincronizarConNube(); // Usuario nuevo o sin datos: subir lo local
             }
             
-            // Iniciar interfaz
             pantallaCarga.style.display = 'none';
             pantallaLogin.style.display = 'none';
             navPrincipal.style.display = 'flex';
@@ -67,7 +64,7 @@ auth.onAuthStateChanged(user => {
             alert("Error de conexión. Intenta de nuevo.");
         });
     } else {
-        // No hay usuario: Mostrar Login
+        // No hay usuario
         currentUser = null;
         pantallaCarga.style.display = 'none';
         navPrincipal.style.display = 'none';
@@ -77,7 +74,6 @@ auth.onAuthStateChanged(user => {
     }
 });
 
-// Función Maestra: Respalda el celular en Firebase
 function sincronizarConNube() {
     if (!currentUser) return;
     const dataObj = {};
@@ -91,10 +87,18 @@ function sincronizarConNube() {
 }
 
 // === INTERFAZ DE LOGIN ===
+function loginConGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => {
+        document.getElementById('login-error').innerText = "Error al iniciar con Google.";
+        document.getElementById('login-error').style.display = 'block';
+    });
+}
+
 function toggleLogin() {
     isLoginMode = !isLoginMode;
-    document.getElementById('login-titulo').innerText = isLoginMode ? "Iniciar Sesión" : "Crear Cuenta";
-    document.getElementById('btn-login-action').innerText = isLoginMode ? "Entrar" : "Registrarse";
+    document.getElementById('login-titulo').innerText = isLoginMode ? "Bienvenido" : "Crear Cuenta";
+    document.getElementById('btn-login-action').innerText = isLoginMode ? "Iniciar Sesión" : "Registrarse";
     document.getElementById('login-toggle-text').innerText = isLoginMode ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?";
     document.querySelector('#login-toggle-text + a').innerText = isLoginMode ? "Regístrate aquí" : "Inicia sesión";
     document.getElementById('login-error').style.display = 'none';
@@ -114,11 +118,11 @@ function procesarAuth() {
         auth.signInWithEmailAndPassword(email, pass).catch(err => {
             errorEl.innerText = "Error: Correo o contraseña incorrectos.";
             errorEl.style.display = 'block';
-            document.getElementById('btn-login-action').innerText = "Entrar";
+            document.getElementById('btn-login-action').innerText = "Iniciar Sesión";
         });
     } else {
         auth.createUserWithEmailAndPassword(email, pass).catch(err => {
-            errorEl.innerText = "Error al registrar. (Quizás el correo ya existe o la clave es muy corta)";
+            errorEl.innerText = "Error al registrar. Verifica el formato del correo.";
             errorEl.style.display = 'block';
             document.getElementById('btn-login-action').innerText = "Registrarse";
         });
@@ -342,7 +346,7 @@ window.addEventListener('popstate', function() {
     }
 });
 
-// === GUARDAR DATOS LOCALES Y EN LA NUBE ===
+// === GUARDAR DATOS ===
 function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemLista('lista-cursos-universidad', n); guardarDatos(); } }
 function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemLista('lista-ciclos-ingles', n); guardarDatos(); } }
 function agregarPendiente() { let n = prompt("Nuevo pendiente:"); if (n) { agregarItemLista('lista-pendientes', n); guardarDatos(); } }
@@ -360,7 +364,7 @@ function guardarDatos() {
     localStorage.setItem('universidad', document.getElementById('lista-cursos-universidad').innerHTML);
     localStorage.setItem('ingles', document.getElementById('lista-ciclos-ingles').innerHTML);
     localStorage.setItem('pendientes', document.getElementById('lista-pendientes').innerHTML);
-    sincronizarConNube(); // Subimos el cambio a Google
+    sincronizarConNube();
 }
 function cargarDatos() {
     document.getElementById('lista-cursos-universidad').innerHTML = localStorage.getItem('universidad') || "";
