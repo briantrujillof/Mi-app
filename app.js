@@ -12,22 +12,80 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Habilitar caché offline de Firebase
 db.enablePersistence().catch(err => console.log("Offline cache err:", err));
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/drbiwjcd/image/upload";
 const UPLOAD_PRESET = "apuntes_app";
 
 let currentUser = null;
-let isLoginMode = false; // Empieza en "Registrarse" por defecto
+let isLoginMode = false;
 let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
+
+// Lógica de Pendientes (NUEVO)
+let pendienteEditando = null; 
 
 // Lógica Swipe
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
+
+// === PERMISOS DE NOTIFICACIÓN ===
+function pedirPermisoNotificaciones() {
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if(permission === "granted") console.log("Permiso de notificaciones concedido.");
+        });
+    }
+}
+
+// === MOTOR DE ALARMAS (El Reloj Invisible) ===
+setInterval(revisarAlarmas, 10000); // Revisa cada 10 segundos
+
+function revisarAlarmas() {
+    if (!currentUser || Notification.permission !== "granted") return;
+    
+    const ahora = new Date();
+    const pendientes = document.querySelectorAll('#lista-pendientes .item-lista');
+    
+    pendientes.forEach(item => {
+        const fecha = item.getAttribute('data-fecha');
+        const hora = item.getAttribute('data-hora');
+        const notificado = item.getAttribute('data-notificado');
+        
+        if (fecha && hora && notificado !== "true") {
+            const fechaAlarma = new Date(`${fecha}T${hora}:00`);
+            
+            // Si la hora actual superó la hora de la alarma, SUENA
+            if (ahora >= fechaAlarma) {
+                const textoTarea = item.querySelector('.pend-texto').innerText;
+                
+                // Disparar Notificación
+                lanzarNotificacion("¡Alarma de App Académica!", textoTarea);
+                
+                // Marcar como notificado para que no suene doble, PERO NO SE BORRA
+                item.setAttribute('data-notificado', 'true');
+                guardarDatos();
+            }
+        }
+    });
+}
+
+function lanzarNotificacion(titulo, cuerpo) {
+    if (navigator.serviceWorker) {
+        navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(titulo, {
+                body: cuerpo,
+                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="50" fill="%231e3a8a"/><path d="M80 64v128M176 64v128M80 128h96" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                vibrate: [200, 100, 200, 100, 200, 100, 200]
+            });
+        });
+    } else {
+        new Notification(titulo, { body: cuerpo });
+    }
+}
+
 
 // === MANEJO ESTRICTO DE SESIÓN ===
 auth.onAuthStateChanged(user => {
@@ -38,18 +96,12 @@ auth.onAuthStateChanged(user => {
 
     if (user) {
         currentUser = user;
-        // Descargar datos EXCLUSIVOS de este usuario de la nube
         db.collection('usuarios').doc(user.uid).get().then(doc => {
-            
-            // BORRAMOS SIEMPRE EL CELULAR PRIMERO PARA NO MEZCLAR CUENTAS
             localStorage.clear(); 
-            
             if (doc.exists && Object.keys(doc.data()).length > 0) {
-                // Si la nube tiene datos, los cargamos al celular
                 const data = doc.data();
                 Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
             } else {
-                // Si la nube NO tiene datos (usuario nuevo real), subimos la memoria vacía
                 sincronizarConNube();
             }
             
@@ -61,18 +113,20 @@ auth.onAuthStateChanged(user => {
             cargarDatos();
             cargarSaldosTarjetas();
             activarArrastrarYSoltar();
-            retrocompatibilidadPendientes();
+            retrocompatibilidadPendientes(); // Protege pendientes viejos sin fecha
             actualizarControles();
+            
+            // Pide permiso al entrar
+            pedirPermisoNotificaciones();
+            
         }).catch(err => {
             console.error("Error obteniendo datos:", err);
             pantallaCarga.style.display = 'none';
             alert("Error de conexión con la nube. Intenta de nuevo.");
         });
     } else {
-        // NO HAY USUARIO (Cerró sesión o nunca entró)
         currentUser = null;
-        localStorage.clear(); // Vaciamos el celular por seguridad
-        
+        localStorage.clear(); 
         pantallaCarga.style.display = 'none';
         navPrincipal.style.display = 'none';
         pantallaPrincipal.style.display = 'none';
@@ -137,8 +191,8 @@ function procesarAuth() {
 
 function cerrarSesion() {
     if(confirm("¿Seguro que deseas cerrar sesión? (Tu información está segura en la nube)")) {
-        localStorage.clear(); // Destruye datos del celular
-        auth.signOut(); // Destruye sesión
+        localStorage.clear();
+        auth.signOut();
     }
 }
 
@@ -148,6 +202,7 @@ document.addEventListener('touchend', e => {
     touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY;
     if (currentUser && document.getElementById('pantalla-principal').style.display !== 'none' &&
         document.getElementById('modal-recorte').style.display === 'none' && document.getElementById('modal-texto').style.display === 'none' &&
+        document.getElementById('modal-pendiente').style.display === 'none' &&
         !document.querySelector('.modo-eliminar') && !document.querySelector('.modo-editar')) {
         handleSwipe();
     }
@@ -201,10 +256,21 @@ function actualizarControles() {
     }
 }
 
-// === LÓGICA DE LISTAS PRINCIPALES ===
+// === LÓGICA DE LISTAS PRINCIPALES Y PENDIENTES ===
 function retrocompatibilidadPendientes() {
-    document.querySelectorAll('#lista-pendientes span').forEach(span => {
-        if (!span.hasAttribute('onclick')) { span.setAttribute('onclick', `editarPendiente(this)`); }
+    // Si hay pendientes antiguos creados con el prompt viejo, los adapta visualmente
+    document.querySelectorAll('#lista-pendientes .item-lista').forEach(item => {
+        let oldSpan = item.querySelector('span:not(.pend-texto)');
+        if (oldSpan && !oldSpan.classList.contains('titulo-item')) {
+            let texto = oldSpan.innerText;
+            // Lo transformamos al formato nuevo sin fecha
+            item.innerHTML = `
+                <input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()">
+                <div class="pendiente-info" onclick="abrirModalPendiente(this.parentElement)">
+                    <span class="pend-texto">${texto}</span>
+                </div>
+            `;
+        }
     });
 }
 
@@ -255,20 +321,115 @@ function renombrarCursoCiclo(nombreActual, pestanaActual) {
         let data = localStorage.getItem('contenido_' + nombreActual);
         if (data) { localStorage.setItem('contenido_' + nuevoNombre, data); localStorage.removeItem('contenido_' + nombreActual); }
         let listaID = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
-        let spans = document.getElementById(listaID).querySelectorAll('span');
+        let spans = document.getElementById(listaID).querySelectorAll('span.titulo-item');
         spans.forEach(span => { if (span.innerText === nombreActual) { span.innerText = nuevoNombre; span.setAttribute('onclick', `abrirDetalle('${nuevoNombre}')`); } });
         guardarDatos();
     }
 }
 
-function editarPendiente(spanElement) {
-    let lista = spanElement.closest('.contenedor-lista');
-    if (lista && lista.classList.contains('modo-editar')) {
-        let nombreActual = spanElement.innerText;
-        let nuevoNombre = prompt("Editar pendiente:", nombreActual);
-        if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) { spanElement.innerText = nuevoNombre.trim(); guardarDatos(); }
+// === NUEVA LÓGICA DE PENDIENTES (FECHA Y HORA) ===
+function abrirModalPendiente(elementoDOM = null) {
+    // Si toca abrir en modo edición o eliminar, bloquea el modal
+    const lista = document.getElementById('lista-pendientes');
+    if (lista.classList.contains('modo-editar') || lista.classList.contains('modo-eliminar')) return;
+
+    pendienteEditando = elementoDOM;
+    document.getElementById('login-error').style.display = 'none';
+
+    if (pendienteEditando) {
+        // Modo Edición: Cargar datos actuales
+        document.getElementById('titulo-modal-pendiente').innerText = "Editar Pendiente";
+        document.getElementById('input-pend-texto').value = pendienteEditando.querySelector('.pend-texto').innerText;
+        document.getElementById('input-pend-fecha').value = pendienteEditando.getAttribute('data-fecha') || "";
+        document.getElementById('input-pend-hora').value = pendienteEditando.getAttribute('data-hora') || "";
+    } else {
+        // Modo Nuevo
+        document.getElementById('titulo-modal-pendiente').innerText = "Nuevo Pendiente";
+        document.getElementById('input-pend-texto').value = "";
+        document.getElementById('input-pend-fecha').value = "";
+        document.getElementById('input-pend-hora').value = "";
     }
+    
+    const modal = document.getElementById('modal-pendiente');
+    modal.style.display = 'flex'; 
+    modal.classList.add('solo-fade-in'); 
+    setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
 }
+
+function cerrarModalPendiente() {
+    document.getElementById('modal-pendiente').style.display = 'none';
+    pendienteEditando = null;
+}
+
+function guardarPendienteDesdeModal() {
+    let texto = document.getElementById('input-pend-texto').value.trim();
+    let fecha = document.getElementById('input-pend-fecha').value;
+    let hora = document.getElementById('input-pend-hora').value;
+
+    if (!texto) { alert("Debes escribir qué vas a hacer."); return; }
+
+    // Generar formato visual para la etiqueta de fecha
+    let badgeHTML = "";
+    if (fecha && hora) {
+        let arrF = fecha.split('-'); // arrF = [2026, 08, 16]
+        let fechaLimpia = `${arrF[2]}/${arrF[1]}/${arrF[0]}`;
+        badgeHTML = `<span class="badge-fecha">🔔 ${fechaLimpia} - ${hora}</span>`;
+    }
+
+    let innerContent = `
+        <input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()">
+        <div class="pendiente-info" onclick="abrirModalPendiente(this.parentElement)">
+            <span class="pend-texto">${texto}</span>
+            ${badgeHTML}
+        </div>
+    `;
+
+    if (pendienteEditando) {
+        // Modificar el existente
+        pendienteEditando.innerHTML = innerContent;
+        if(fecha && hora) {
+            pendienteEditando.setAttribute('data-fecha', fecha);
+            pendienteEditando.setAttribute('data-hora', hora);
+            // Resetear la alarma para que vuelva a sonar
+            pendienteEditando.setAttribute('data-notificado', 'false'); 
+        } else {
+            pendienteEditando.removeAttribute('data-fecha');
+            pendienteEditando.removeAttribute('data-hora');
+        }
+    } else {
+        // Crear uno nuevo
+        let ul = document.getElementById('lista-pendientes');
+        if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
+        let li = document.createElement('div'); 
+        li.className = 'item-lista fade-in-up'; 
+        
+        if(fecha && hora) {
+            li.setAttribute('data-fecha', fecha);
+            li.setAttribute('data-hora', hora);
+            li.setAttribute('data-notificado', 'false'); 
+        }
+        
+        li.innerHTML = innerContent;
+        ul.appendChild(li); 
+    }
+
+    guardarDatos();
+    verificarContenidoPrincipal();
+    cerrarModalPendiente();
+    pedirPermisoNotificaciones(); // Por si acaso no los aceptó antes
+}
+
+function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemListaBasico('lista-cursos-universidad', n); guardarDatos(); } }
+function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemListaBasico('lista-ciclos-ingles', n); guardarDatos(); } }
+
+function agregarItemListaBasico(idLista, nombre) {
+    let ul = document.getElementById(idLista);
+    if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
+    let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; 
+    li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span class="titulo-item" onclick="abrirDetalle('${nombre}')" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
+    ul.appendChild(li); verificarContenidoPrincipal();
+}
+
 
 // === PANTALLAS DE LECTURA Y DETALLE ===
 function abrirDetalle(nombreItem) {
@@ -354,19 +515,6 @@ window.addEventListener('popstate', function() {
 });
 
 // === GUARDAR DATOS ===
-function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemLista('lista-cursos-universidad', n); guardarDatos(); } }
-function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemLista('lista-ciclos-ingles', n); guardarDatos(); } }
-function agregarPendiente() { let n = prompt("Nuevo pendiente:"); if (n) { agregarItemLista('lista-pendientes', n); guardarDatos(); } }
-
-function agregarItemLista(idLista, nombre) {
-    let ul = document.getElementById(idLista);
-    if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
-    let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; 
-    if (idLista === 'lista-pendientes') { li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span onclick="editarPendiente(this)" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
-    } else { li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span onclick="abrirDetalle('${nombre}')" style="cursor:pointer; flex-grow:1;">${nombre}</span>`; }
-    ul.appendChild(li); verificarContenidoPrincipal();
-}
-
 function guardarDatos() {
     localStorage.setItem('universidad', document.getElementById('lista-cursos-universidad').innerHTML);
     localStorage.setItem('ingles', document.getElementById('lista-ciclos-ingles').innerHTML);
