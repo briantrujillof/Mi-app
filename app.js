@@ -1,4 +1,3 @@
-// === CONFIGURACIÓN DE FIREBASE Y CLOUDINARY ===
 const firebaseConfig = {
     apiKey: "AIzaSyDjvG4ZU0WS4iWwFJ-qIuTNaYwTvfLuKig",
     authDomain: "help-57f3b.firebaseapp.com",
@@ -22,26 +21,19 @@ let isLoginMode = false;
 let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
-
-// Lógica de Pendientes (NUEVO)
 let pendienteEditando = null; 
 
-// Lógica Swipe
 let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
-// === PERMISOS DE NOTIFICACIÓN ===
 function pedirPermisoNotificaciones() {
     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if(permission === "granted") console.log("Permiso de notificaciones concedido.");
-        });
+        Notification.requestPermission();
     }
 }
 
-// === MOTOR DE ALARMAS (El Reloj Invisible) ===
-setInterval(revisarAlarmas, 10000); // Revisa cada 10 segundos
+setInterval(revisarAlarmas, 10000); 
 
 function revisarAlarmas() {
     if (!currentUser || Notification.permission !== "granted") return;
@@ -57,14 +49,11 @@ function revisarAlarmas() {
         if (fecha && hora && notificado !== "true") {
             const fechaAlarma = new Date(`${fecha}T${hora}:00`);
             
-            // Si la hora actual superó la hora de la alarma, SUENA
             if (ahora >= fechaAlarma) {
                 const textoTarea = item.querySelector('.pend-texto').innerText;
                 
-                // Disparar Notificación
-                lanzarNotificacion("¡Alarma de App Académica!", textoTarea);
+                lanzarNotificacion("¡App Académica!", textoTarea);
                 
-                // Marcar como notificado para que no suene doble, PERO NO SE BORRA
                 item.setAttribute('data-notificado', 'true');
                 guardarDatos();
             }
@@ -73,21 +62,22 @@ function revisarAlarmas() {
 }
 
 function lanzarNotificacion(titulo, cuerpo) {
-    if (navigator.serviceWorker) {
-        navigator.serviceWorker.ready.then(registration => {
-            registration.showNotification(titulo, {
-                body: cuerpo,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="50" fill="%231e3a8a"/><path d="M80 64v128M176 64v128M80 128h96" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-                vibrate: [200, 100, 200, 100, 200, 100, 200]
+    if (Notification.permission === "granted") {
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(titulo, {
+                    body: cuerpo,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="50" fill="%231e3a8a"/><path d="M80 64v128M176 64v128M80 128h96" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                    vibrate: [200, 100, 200, 100, 200, 100, 200],
+                    requireInteraction: true
+                });
             });
-        });
-    } else {
-        new Notification(titulo, { body: cuerpo });
+        } else {
+            new Notification(titulo, { body: cuerpo });
+        }
     }
 }
 
-
-// === MANEJO ESTRICTO DE SESIÓN ===
 auth.onAuthStateChanged(user => {
     const pantallaCarga = document.getElementById('pantalla-carga');
     const pantallaLogin = document.getElementById('pantalla-login');
@@ -113,10 +103,9 @@ auth.onAuthStateChanged(user => {
             cargarDatos();
             cargarSaldosTarjetas();
             activarArrastrarYSoltar();
-            retrocompatibilidadPendientes(); // Protege pendientes viejos sin fecha
+            retrocompatibilidadPendientes(); 
             actualizarControles();
             
-            // Pide permiso al entrar
             pedirPermisoNotificaciones();
             
         }).catch(err => {
@@ -146,7 +135,6 @@ function sincronizarConNube() {
       .catch(e => console.error("Error sincronizando:", e));
 }
 
-// === INTERFAZ DE LOGIN ===
 function loginConGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).catch(err => {
@@ -196,7 +184,6 @@ function cerrarSesion() {
     }
 }
 
-// === NAVEGACIÓN SWIPE ===
 document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
 document.addEventListener('touchend', e => {
     touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY;
@@ -256,14 +243,13 @@ function actualizarControles() {
     }
 }
 
-// === LÓGICA DE LISTAS PRINCIPALES Y PENDIENTES ===
 function retrocompatibilidadPendientes() {
-    // Si hay pendientes antiguos creados con el prompt viejo, los adapta visualmente
     document.querySelectorAll('#lista-pendientes .item-lista').forEach(item => {
+        if (item.querySelector('.pendiente-info')) return; 
+
         let oldSpan = item.querySelector('span:not(.pend-texto)');
         if (oldSpan && !oldSpan.classList.contains('titulo-item')) {
             let texto = oldSpan.innerText;
-            // Lo transformamos al formato nuevo sin fecha
             item.innerHTML = `
                 <input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()">
                 <div class="pendiente-info" onclick="abrirModalPendiente(this.parentElement)">
@@ -327,23 +313,19 @@ function renombrarCursoCiclo(nombreActual, pestanaActual) {
     }
 }
 
-// === NUEVA LÓGICA DE PENDIENTES (FECHA Y HORA) ===
 function abrirModalPendiente(elementoDOM = null) {
-    // Si toca abrir en modo edición o eliminar, bloquea el modal
     const lista = document.getElementById('lista-pendientes');
-    if (lista.classList.contains('modo-editar') || lista.classList.contains('modo-eliminar')) return;
+    if (lista.classList.contains('modo-eliminar')) return;
 
     pendienteEditando = elementoDOM;
     document.getElementById('login-error').style.display = 'none';
 
     if (pendienteEditando) {
-        // Modo Edición: Cargar datos actuales
         document.getElementById('titulo-modal-pendiente').innerText = "Editar Pendiente";
         document.getElementById('input-pend-texto').value = pendienteEditando.querySelector('.pend-texto').innerText;
         document.getElementById('input-pend-fecha').value = pendienteEditando.getAttribute('data-fecha') || "";
         document.getElementById('input-pend-hora').value = pendienteEditando.getAttribute('data-hora') || "";
     } else {
-        // Modo Nuevo
         document.getElementById('titulo-modal-pendiente').innerText = "Nuevo Pendiente";
         document.getElementById('input-pend-texto').value = "";
         document.getElementById('input-pend-fecha').value = "";
@@ -368,12 +350,11 @@ function guardarPendienteDesdeModal() {
 
     if (!texto) { alert("Debes escribir qué vas a hacer."); return; }
 
-    // Generar formato visual para la etiqueta de fecha
     let badgeHTML = "";
     if (fecha && hora) {
-        let arrF = fecha.split('-'); // arrF = [2026, 08, 16]
+        let arrF = fecha.split('-');
         let fechaLimpia = `${arrF[2]}/${arrF[1]}/${arrF[0]}`;
-        badgeHTML = `<span class="badge-fecha">🔔 ${fechaLimpia} - ${hora}</span>`;
+        badgeHTML = `<span class="badge-fecha">${fechaLimpia} - ${hora}</span>`;
     }
 
     let innerContent = `
@@ -385,19 +366,16 @@ function guardarPendienteDesdeModal() {
     `;
 
     if (pendienteEditando) {
-        // Modificar el existente
         pendienteEditando.innerHTML = innerContent;
         if(fecha && hora) {
             pendienteEditando.setAttribute('data-fecha', fecha);
             pendienteEditando.setAttribute('data-hora', hora);
-            // Resetear la alarma para que vuelva a sonar
             pendienteEditando.setAttribute('data-notificado', 'false'); 
         } else {
             pendienteEditando.removeAttribute('data-fecha');
             pendienteEditando.removeAttribute('data-hora');
         }
     } else {
-        // Crear uno nuevo
         let ul = document.getElementById('lista-pendientes');
         if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
         let li = document.createElement('div'); 
@@ -416,7 +394,7 @@ function guardarPendienteDesdeModal() {
     guardarDatos();
     verificarContenidoPrincipal();
     cerrarModalPendiente();
-    pedirPermisoNotificaciones(); // Por si acaso no los aceptó antes
+    pedirPermisoNotificaciones();
 }
 
 function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemListaBasico('lista-cursos-universidad', n); guardarDatos(); } }
@@ -430,8 +408,6 @@ function agregarItemListaBasico(idLista, nombre) {
     ul.appendChild(li); verificarContenidoPrincipal();
 }
 
-
-// === PANTALLAS DE LECTURA Y DETALLE ===
 function abrirDetalle(nombreItem) {
     if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
     const pestanaActual = vistas[vistaActualIndex];
@@ -514,7 +490,6 @@ window.addEventListener('popstate', function() {
     }
 });
 
-// === GUARDAR DATOS ===
 function guardarDatos() {
     localStorage.setItem('universidad', document.getElementById('lista-cursos-universidad').innerHTML);
     localStorage.setItem('ingles', document.getElementById('lista-ciclos-ingles').innerHTML);
@@ -528,7 +503,6 @@ function cargarDatos() {
     verificarContenidoPrincipal();
 }
 
-// === HISTORIAL Y PASAJES ===
 function registrarMovimiento(tipo, monto, desc) {
     let movs = JSON.parse(localStorage.getItem('movs_' + tipo) || '[]');
     let ahora = new Date();
@@ -592,7 +566,6 @@ function descontarPasaje(tipo, costo) {
     } else { alert("Saldo insuficiente."); }
 }
 
-// === AGREGAR Y ELIMINAR APUNTES ===
 function activarModoEliminarDetalle() { document.getElementById('contenido-detalle').classList.add('modo-eliminar'); actualizarControles(); }
 function cancelarModoEliminarDetalle() { document.getElementById('contenido-detalle').classList.remove('modo-eliminar'); document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false); actualizarControles(); }
 function confirmarEliminacionDetalle() {

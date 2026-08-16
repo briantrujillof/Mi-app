@@ -1,7 +1,7 @@
-const CACHE_NAME = 'app-academica-v2';
+const CACHE_NAME = 'app-academica-v3';
 
 self.addEventListener('install', event => {
-    self.skipWaiting(); // Obliga al celular a usar esta nueva versión de inmediato
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             return cache.addAll(['/', '/index.html', '/style.css', '/app.js', '/manifest.json']);
@@ -14,7 +14,6 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cache => {
-                    // Borra la memoria de la versión 1.0
                     if (cache !== CACHE_NAME) {
                         return caches.delete(cache);
                     }
