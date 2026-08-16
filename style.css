@@ -2,13 +2,8 @@
     --bg: #070b14; --card: #111827; --text: #f8fafc; --muted: #64748b; 
     --blue-dark: #1e3a8a; --red-dark: #7f1d1d; --border: #1f2937;
 }
-
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-
-html, body { 
-    background-color: var(--bg); color: var(--text); padding-bottom: 90px; 
-    overflow-x: hidden; width: 100vw; max-width: 100%; position: relative; 
-}
+html, body { background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; width: 100vw; max-width: 100%; position: relative; }
 
 /* === ANIMACIONES Y ESTRUCTURA === */
 .pantalla { width: 100%; min-height: 100vh;}
@@ -18,7 +13,6 @@ html, body {
 .fade-in-up { animation: fadeInUp 0.35s forwards ease-out; }
 .fade-out { animation: fadeOut 0.3s forwards ease-in; }
 .solo-fade-in { animation: soloFadeIn 0.2s forwards; }
-
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
 @keyframes fadeInUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -43,7 +37,6 @@ html, body {
 .btn-nav.activo { color: var(--text); border-bottom: 2px solid #3b82f6; font-weight: 600; }
 .pestana { display: none; padding: 0 15px; animation: fadeInUp 0.3s ease; }
 .pestana.activa { display: block; }
-
 .header-seccion { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
 .titulo-seccion { font-size: 24px; font-weight: 700; letter-spacing: -0.5px;}
 .logo-seccion-svg { width: 28px; height: 28px; color: #60a5fa; } 
@@ -53,26 +46,15 @@ html, body {
 /* Estructura de Bloques */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
-
-.item-lista, .bloque-detalle { 
-    background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
-    -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-    transition: border 0.2s, background-color 0.2s;
-}
-
+.item-lista, .bloque-detalle { background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; transition: border 0.2s, background-color 0.2s; }
 .item-lista { padding: 18px 15px; display: flex; align-items: center; gap: 15px; }
 .item-lista span { font-size: 17px; font-weight: 500; word-wrap: break-word;}
-
 .bloque-detalle { padding: 22px 20px; }
 .bloque-detalle h4 { margin-bottom: 8px; font-size: 18px; color: #60a5fa; font-weight: 600;}
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
 
 /* REGLA MÁGICA: Cortar texto largo a 4 líneas */
-#contenido-detalle .texto-detalle {
-    font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word;
-    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
-}
-/* Vista Pantalla Completa del Apunte */
+#contenido-detalle .texto-detalle { font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
 #contenido-lectura { padding: 5px 20px 40px 20px; }
 #contenido-lectura .texto-detalle { display: block; font-size: 16px; line-height: 1.8; color: #e2e8f0; word-wrap: break-word; white-space: pre-wrap; margin-top: 10px;}
 #contenido-lectura img { width: 100%; border-radius: 8px; margin-top: 15px; }
@@ -119,7 +101,6 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .btn-cuadrado { width: 55px; height: 55px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; transition: transform 0.1s ease; }
 .btn-cuadrado:active { transform: scale(0.9); }
 .btn-cuadrado svg { width: 24px; height: 24px; color: white; }
-
 .controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 999; animation: fadeInUp 0.3s forwards; }
 .boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
 

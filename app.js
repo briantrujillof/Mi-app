@@ -19,7 +19,7 @@ const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/drbiwjcd/image/upload";
 const UPLOAD_PRESET = "apuntes_app";
 
 let currentUser = null;
-let isLoginMode = true;
+let isLoginMode = false; // Empieza en "Registrarse" por defecto
 let itemActual = "";
 let tituloImagenPendiente = "";
 let cropper;
@@ -29,7 +29,7 @@ let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
-// === MANEJO DE SESIÓN Y NUBE ===
+// === MANEJO ESTRICTO DE SESIÓN ===
 auth.onAuthStateChanged(user => {
     const pantallaCarga = document.getElementById('pantalla-carga');
     const pantallaLogin = document.getElementById('pantalla-login');
@@ -38,14 +38,19 @@ auth.onAuthStateChanged(user => {
 
     if (user) {
         currentUser = user;
-        // Descargar datos de la nube
+        // Descargar datos EXCLUSIVOS de este usuario de la nube
         db.collection('usuarios').doc(user.uid).get().then(doc => {
+            
+            // BORRAMOS SIEMPRE EL CELULAR PRIMERO PARA NO MEZCLAR CUENTAS
+            localStorage.clear(); 
+            
             if (doc.exists && Object.keys(doc.data()).length > 0) {
+                // Si la nube tiene datos, los cargamos al celular
                 const data = doc.data();
-                localStorage.clear();
                 Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
             } else {
-                sincronizarConNube(); // Usuario nuevo o sin datos: subir lo local
+                // Si la nube NO tiene datos (usuario nuevo real), subimos la memoria vacía
+                sincronizarConNube();
             }
             
             pantallaCarga.style.display = 'none';
@@ -61,11 +66,13 @@ auth.onAuthStateChanged(user => {
         }).catch(err => {
             console.error("Error obteniendo datos:", err);
             pantallaCarga.style.display = 'none';
-            alert("Error de conexión. Intenta de nuevo.");
+            alert("Error de conexión con la nube. Intenta de nuevo.");
         });
     } else {
-        // No hay usuario
+        // NO HAY USUARIO (Cerró sesión o nunca entró)
         currentUser = null;
+        localStorage.clear(); // Vaciamos el celular por seguridad
+        
         pantallaCarga.style.display = 'none';
         navPrincipal.style.display = 'none';
         pantallaPrincipal.style.display = 'none';
@@ -82,7 +89,6 @@ function sincronizarConNube() {
         dataObj[key] = localStorage.getItem(key);
     }
     db.collection('usuarios').doc(currentUser.uid).set(dataObj)
-      .then(() => console.log("Sincronizado con la nube exitosamente"))
       .catch(e => console.error("Error sincronizando:", e));
 }
 
@@ -130,8 +136,9 @@ function procesarAuth() {
 }
 
 function cerrarSesion() {
-    if(confirm("¿Seguro que deseas cerrar sesión?")) {
-        auth.signOut();
+    if(confirm("¿Seguro que deseas cerrar sesión? (Tu información está segura en la nube)")) {
+        localStorage.clear(); // Destruye datos del celular
+        auth.signOut(); // Destruye sesión
     }
 }
 
