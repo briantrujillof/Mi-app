@@ -6,7 +6,6 @@
 
 html, body { 
     background-color: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; width: 100vw; max-width: 100%; position: relative; 
-    /* Bloqueo total de selección de texto */
     -webkit-user-select: none; 
     -moz-user-select: none; 
     -ms-user-select: none; 
@@ -14,7 +13,6 @@ html, body {
     -webkit-tap-highlight-color: transparent; 
 }
 
-/* Excepción: Permitir seleccionar texto SOLO dentro de las cajas donde el usuario escribe */
 input, textarea {
     -webkit-user-select: auto;
     -moz-user-select: auto;

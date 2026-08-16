@@ -1,4 +1,4 @@
-const CACHE_NAME = 'app-academica-v3';
+const CACHE_NAME = 'app-academica-v5';
 
 self.addEventListener('install', event => {
     self.skipWaiting();

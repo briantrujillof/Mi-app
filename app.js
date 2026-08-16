@@ -27,6 +27,7 @@ let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
+// === PERMISOS Y ALARMAS CLÁSICAS (Sin bugs, silenciosas) ===
 function pedirPermisoNotificaciones() {
     if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
@@ -52,7 +53,7 @@ function revisarAlarmas() {
             if (ahora >= fechaAlarma) {
                 const textoTarea = item.querySelector('.pend-texto').innerText;
                 
-                lanzarNotificacion("¡App Académica!", textoTarea);
+                lanzarNotificacion("App Académica", textoTarea);
                 
                 item.setAttribute('data-notificado', 'true');
                 guardarDatos();
@@ -67,13 +68,11 @@ function lanzarNotificacion(titulo, cuerpo) {
             navigator.serviceWorker.ready.then(registration => {
                 registration.showNotification(titulo, {
                     body: cuerpo,
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" rx="50" fill="%231e3a8a"/><path d="M80 64v128M176 64v128M80 128h96" stroke="white" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-                    vibrate: [200, 100, 200, 100, 200, 100, 200],
-                    requireInteraction: true
+                    silent: true // 100% Silenciosa, sin vibrar, sin íconos raros que lo bugueen
                 });
             });
         } else {
-            new Notification(titulo, { body: cuerpo });
+            new Notification(titulo, { body: cuerpo, silent: true });
         }
     }
 }
@@ -291,7 +290,12 @@ function confirmarEliminacion(pestañaID, listaID) {
 function borrarSeleccionadosPendientes() {
     let seleccionados = document.getElementById('lista-pendientes').querySelectorAll('.casilla-seleccion:checked');
     if (seleccionados.length > 0 && confirm("¿Eliminar los pendientes seleccionados?")) {
-        seleccionados.forEach(c => { let item = c.closest('.item-lista'); item.classList.remove('fade-in-up'); item.classList.add('fade-out'); setTimeout(() => item.remove(), 290); });
+        seleccionados.forEach(c => { 
+            let item = c.closest('.item-lista'); 
+            item.classList.remove('fade-in-up'); 
+            item.classList.add('fade-out'); 
+            setTimeout(() => item.remove(), 290); 
+        });
         setTimeout(() => { guardarDatos(); verificarContenidoPrincipal(); }, 300);
     }
 }
