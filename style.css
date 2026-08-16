@@ -10,8 +10,9 @@ html, body {
     overflow-x: hidden; width: 100vw; max-width: 100%; position: relative; 
 }
 
-/* === ANIMACIONES === */
+/* === ANIMACIONES Y ESTRUCTURA === */
 .pantalla { width: 100%; min-height: 100vh;}
+.pantalla-centrada { position: fixed; top:0; left:0; width: 100vw; height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px; z-index: 5000; }
 .slide-in { animation: slideIn 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .slide-out { animation: slideOut 0.3s forwards cubic-bezier(0.25, 0.8, 0.25, 1); }
 .fade-in-up { animation: fadeInUp 0.35s forwards ease-out; }
@@ -24,9 +25,16 @@ html, body {
 @keyframes fadeOut { from { transform: scale(1); opacity: 1; } to { transform: scale(0.95); opacity: 0; } }
 @keyframes soloFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+/* === SPINNER DE CARGA === */
+.loader { border: 4px solid var(--border); border-top: 4px solid #3b82f6; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* === LOGIN UI === */
+.caja-login { background: var(--card); padding: 35px 25px; border-radius: 16px; width: 100%; max-width: 400px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+
 /* Navegación y Cabeceras */
-.barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
-.btn-nav { background: transparent; border: none; color: var(--muted); font-size: 15px; font-weight: 500; cursor: pointer; padding-bottom: 5px; transition: color 0.3s ease;}
+.barra-navegacion { background-color: var(--bg); display: flex; justify-content: space-around; align-items: center; padding: 15px 5px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
+.btn-nav { background: transparent; border: none; color: var(--muted); font-size: 15px; font-weight: 500; cursor: pointer; padding-bottom: 5px; transition: color 0.3s ease; display:flex; align-items:center; justify-content:center;}
 .btn-nav.activo { color: var(--text); border-bottom: 2px solid #3b82f6; font-weight: 600; }
 .pestana { display: none; padding: 0 15px; animation: fadeInUp 0.3s ease; }
 .pestana.activa { display: block; }
@@ -37,14 +45,14 @@ html, body {
 .header-detalle { background: var(--card); padding: 20px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); text-align: center; }
 #titulo-detalle, #titulo-lectura { font-size: 22px; font-weight: 700; margin: 0; color: white;}
 
-/* === ESTRUCTURA DE BLOQUES === */
+/* Estructura de Bloques */
 .contenedor-lista { display: flex; flex-direction: column; gap: 12px; min-height: 100px; padding-bottom: 20px; }
 .contenedor-lista-detalle { display: flex; flex-direction: column; gap: 15px; padding: 0 15px; min-height: 100px; }
 
 .item-lista, .bloque-detalle { 
     background: var(--card); border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.2); 
     -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-    transition: border 0.2s, background-color 0.2s; /* Arreglado para que no buguee SortableJS */
+    transition: border 0.2s, background-color 0.2s;
 }
 
 .item-lista { padding: 18px 15px; display: flex; align-items: center; gap: 15px; }
@@ -54,18 +62,17 @@ html, body {
 .bloque-detalle h4 { margin-bottom: 8px; font-size: 18px; color: #60a5fa; font-weight: 600;}
 .imagen-galeria { width: 100%; border-radius: 8px; margin-top: 10px; }
 
-/* REGLA MÁGICA: Cortar texto largo a 4 líneas en la vista general */
+/* REGLA MÁGICA: Cortar texto largo a 4 líneas */
 #contenido-detalle .texto-detalle {
     font-size: 15px; line-height: 1.7; color: #cbd5e1; margin-top: 5px; word-wrap: break-word;
     display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;
 }
-
 /* Vista Pantalla Completa del Apunte */
 #contenido-lectura { padding: 5px 20px 40px 20px; }
 #contenido-lectura .texto-detalle { display: block; font-size: 16px; line-height: 1.8; color: #e2e8f0; word-wrap: break-word; white-space: pre-wrap; margin-top: 10px;}
 #contenido-lectura img { width: 100%; border-radius: 8px; margin-top: 15px; }
 
-/* === SORTABLEJS === */
+/* SORTABLEJS */
 .sortable-ghost { opacity: 0.3; }
 .sortable-drag { cursor: grabbing !important; background: var(--bg) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.6) !important; }
 
@@ -80,7 +87,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .vacio-msg-principal { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; padding: 40px 20px; border: 1px dashed var(--border); border-radius: 12px; margin-top: 10px;}
 .vacio-msg { text-align: center; color: var(--muted); font-size: 15px; font-style: italic; margin-top: 20px;}
 
-/* === TARJETAS DE PASAJES === */
+/* TARJETAS DE PASAJES */
 .tarjeta-transporte { background: var(--card); border-radius: 16px; padding: 22px; border: 1px solid var(--border); position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3);}
 .tarjeta-header { font-size: 18px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;}
 .linea-roja { display: inline-block; width: 30px; height: 4px; background: #ef4444; border-radius: 2px;}
@@ -90,7 +97,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .btn-viaje { width: 100%; background-color: var(--bg); color: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s;}
 .btn-viaje:active { transform: scale(0.97); }
 
-/* === HISTORIAL TIPO YAPE === */
+/* HISTORIAL YAPE */
 .movimiento-item { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 20px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 .mov-info { display: flex; flex-direction: column; gap: 2px; }
 .mov-fecha { font-size: 12px; color: var(--muted); }
@@ -98,7 +105,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .color-positivo { color: #10b981; }
 .color-negativo { color: #ef4444; }
 
-/* === COLORES Y BOTONES === */
+/* COLORES Y BOTONES */
 .azul { background-color: var(--blue-dark) !important; color: white !important; }
 .rojo { background-color: var(--red-dark) !important; color: white !important; }
 .transparente { background: transparent !important; border: 1px solid var(--muted); color: var(--text) !important; }
@@ -111,7 +118,7 @@ input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--blue-dar
 .controles-confirmar { position: fixed; bottom: 25px; left: 20px; right: 20px; display: flex; gap: 10px; z-index: 999; animation: fadeInUp 0.3s forwards; }
 .boton-largo { flex-grow: 1; padding: 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; color: white;}
 
-/* === MODALES === */
+/* MODALES */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; }
 .modal-caja { background: var(--card); width: 90%; max-width: 400px; padding: 24px; border-radius: 16px; border: 1px solid var(--border); }
 .modal-caja h3 { margin-bottom: 18px; color: white; font-size: 20px;}
