@@ -74,7 +74,7 @@ function programarNotificacionOneSignal(texto, fecha, hora) {
 
     const payload = {
         app_id: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
-        include_external_user_ids: [currentUser.uid], 
+        included_segments: ["Subscribed Users"], // Corrección aplicada aquí
         headings: { en: "🔔 Recordatorio Académico" },
         contents: { en: texto },
         send_after: sendDate
@@ -101,10 +101,10 @@ auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
         
-        // Vincular usuario con OneSignal
+        // Vincular usuario con OneSignal y pedir permiso si no lo tiene
         OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(user.uid);
-            OneSignal.Slidedown.promptPush(); // Pide permiso
+            OneSignal.Slidedown.promptPush(); 
         });
 
         db.collection('usuarios').doc(user.uid).get().then(doc => {
@@ -478,7 +478,7 @@ function agregarClase() {
     if (n) { 
         let ul = document.getElementById('contenido-detalle');
         if(ul.querySelector('.vacio-msg')) ul.innerHTML = ''; 
-        let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; // Usamos item-lista para mantener estilo de la lista
+        let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; 
         li.innerHTML = `<input type="checkbox" class="casilla-seleccion-detalle" onclick="event.stopPropagation()"><span class="titulo-item" onclick="abrirApuntes('${n}', 'clase')" style="cursor:pointer; flex-grow:1;">${n}</span>`;
         ul.appendChild(li); 
         guardarContenidoDetalle();
@@ -621,7 +621,6 @@ function cargarDatos() {
     document.getElementById('lista-ciclos-ingles').innerHTML = localStorage.getItem('ingles') || "";
     document.getElementById('lista-pendientes').innerHTML = localStorage.getItem('pendientes') || "";
     
-    // Convertir el formato viejo al nuevo
     document.querySelectorAll('#lista-cursos-universidad span.titulo-item').forEach(span => {
         if(span.getAttribute('onclick').includes('abrirDetalle')) {
             let nombre = span.innerText; span.setAttribute('onclick', `abrirClases('${nombre}')`);
