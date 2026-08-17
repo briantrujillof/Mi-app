@@ -8,6 +8,8 @@ window.OneSignalDeferred = window.OneSignalDeferred || [];
 OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
         appId: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
+        serviceWorkerParam: { scope: "/Mi-app/" },
+        serviceWorkerPath: "/Mi-app/OneSignalSDKWorker.js",
         notifyButton: { enable: false } // Oculto, se pide permiso al loguearse
     });
 });
@@ -74,7 +76,7 @@ function programarNotificacionOneSignal(texto, fecha, hora) {
 
     const payload = {
         app_id: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
-        included_segments: ["Subscribed Users"], // Corrección aplicada aquí
+        included_segments: ["Subscribed Users"], 
         headings: { en: "🔔 Recordatorio Académico" },
         contents: { en: texto },
         send_after: sendDate
