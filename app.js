@@ -1,3 +1,18 @@
+// === INYECCIÓN DINÁMICA DE ONESIGNAL (Sin tocar tu HTML) ===
+const scriptOneSignal = document.createElement('script');
+scriptOneSignal.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
+scriptOneSignal.defer = true;
+document.head.appendChild(scriptOneSignal);
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+        appId: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
+        notifyButton: { enable: false } // Oculto, se pide permiso al loguearse
+    });
+});
+
+// === CONFIGURACIÓN FIREBASE ===
 const firebaseConfig = {
     apiKey: "AIzaSyDjvG4ZU0WS4iWwFJ-qIuTNaYwTvfLuKig",
     authDomain: "help-57f3b.firebaseapp.com",
@@ -16,6 +31,7 @@ db.enablePersistence().catch(err => console.log("Offline cache err:", err));
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/drbiwjcd/image/upload";
 const UPLOAD_PRESET = "apuntes_app";
 
+// === ESTADO GLOBAL ===
 let currentUser = null;
 let isLoginMode = false;
 let itemActual = "";
@@ -27,54 +43,53 @@ let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
-// === PERMISOS Y ALARMAS CLÁSICAS (Sin bugs, silenciosas) ===
-function pedirPermisoNotificaciones() {
-    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission();
+// Variables para control de niveles (Universidad 3, Inglés 2)
+let cursoActual = "";
+let claseActual = "";
+let cicloActual = "";
+let nivelActual = 0; // 0: Principal, 1: Clases(PUCP), 2: Apuntes
+
+// === INYECCIÓN BOTÓN AÑADIR CLASE ===
+window.addEventListener('DOMContentLoaded', () => {
+    const flotantesDetalle = document.getElementById('flotantes-detalle');
+    if(flotantesDetalle) {
+        const btnAddClase = document.createElement('button');
+        btnAddClase.className = 'btn-cuadrado azul';
+        btnAddClase.id = 'btn-add-clase';
+        btnAddClase.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+        btnAddClase.onclick = agregarClase;
+        btnAddClase.style.display = 'none';
+        flotantesDetalle.prepend(btnAddClase);
     }
-}
+});
 
-setInterval(revisarAlarmas, 10000); 
-
-function revisarAlarmas() {
-    if (!currentUser || Notification.permission !== "granted") return;
+// === ALARMAS EN LA NUBE CON ONESIGNAL ===
+function programarNotificacionOneSignal(texto, fecha, hora) {
+    if (!currentUser) return;
     
-    const ahora = new Date();
-    const pendientes = document.querySelectorAll('#lista-pendientes .item-lista');
+    const ONESIGNAL_REST_API_KEY = "os_v2_app_l67mck2p75emvbirvzsa3xtox3mg7wgljeoekm46xbnb6ftomtzycyjj3yxfqbjmvuyx3oev7alsqwhfkcmo7jzhx5jo7zdewnjr2ia";
     
-    pendientes.forEach(item => {
-        const fecha = item.getAttribute('data-fecha');
-        const hora = item.getAttribute('data-hora');
-        const notificado = item.getAttribute('data-notificado');
-        
-        if (fecha && hora && notificado !== "true") {
-            const fechaAlarma = new Date(`${fecha}T${hora}:00`);
-            
-            if (ahora >= fechaAlarma) {
-                const textoTarea = item.querySelector('.pend-texto').innerText;
-                
-                lanzarNotificacion("App Académica", textoTarea);
-                
-                item.setAttribute('data-notificado', 'true');
-                guardarDatos();
-            }
-        }
-    });
-}
+    // Formato UTC requerido por OneSignal
+    const sendDate = new Date(`${fecha}T${hora}:00`).toUTCString();
 
-function lanzarNotificacion(titulo, cuerpo) {
-    if (Notification.permission === "granted") {
-        if (navigator.serviceWorker) {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.showNotification(titulo, {
-                    body: cuerpo,
-                    silent: true // 100% Silenciosa, sin vibrar, sin íconos raros que lo bugueen
-                });
-            });
-        } else {
-            new Notification(titulo, { body: cuerpo, silent: true });
-        }
-    }
+    const payload = {
+        app_id: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
+        include_external_user_ids: [currentUser.uid], 
+        headings: { en: "🔔 Recordatorio Académico" },
+        contents: { en: texto },
+        send_after: sendDate
+    };
+
+    fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(() => console.log("Alarma OneSignal programada con éxito."))
+    .catch(err => console.error("Error programando notificación:", err));
 }
 
 auth.onAuthStateChanged(user => {
@@ -85,6 +100,13 @@ auth.onAuthStateChanged(user => {
 
     if (user) {
         currentUser = user;
+        
+        // Vincular usuario con OneSignal
+        OneSignalDeferred.push(function(OneSignal) {
+            OneSignal.login(user.uid);
+            OneSignal.Slidedown.promptPush(); // Pide permiso
+        });
+
         db.collection('usuarios').doc(user.uid).get().then(doc => {
             localStorage.clear(); 
             if (doc.exists && Object.keys(doc.data()).length > 0) {
@@ -104,8 +126,6 @@ auth.onAuthStateChanged(user => {
             activarArrastrarYSoltar();
             retrocompatibilidadPendientes(); 
             actualizarControles();
-            
-            pedirPermisoNotificaciones();
             
         }).catch(err => {
             console.error("Error obteniendo datos:", err);
@@ -183,6 +203,7 @@ function cerrarSesion() {
     }
 }
 
+// === GESTOS TÁCTILES ===
 document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, {passive: true});
 document.addEventListener('touchend', e => {
     touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY;
@@ -223,8 +244,28 @@ function actualizarControles() {
     
     if (enDetalle) {
         if (itemActual && itemActual.startsWith('historial_')) return; 
-        if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) { document.getElementById('confirmar-detalle').style.display = 'flex';
-        } else { document.getElementById('flotantes-detalle').style.display = 'flex'; }
+        if (document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) { 
+            document.getElementById('confirmar-detalle').style.display = 'flex';
+        } else { 
+            document.getElementById('flotantes-detalle').style.display = 'flex'; 
+            
+            // Lógica asimétrica de niveles
+            const btnAddClase = document.getElementById('btn-add-clase');
+            const btnTexto = document.getElementById('flotantes-detalle').children[1];
+            const btnImg = document.getElementById('flotantes-detalle').children[2];
+            
+            if (nivelActual === 1) {
+                // Universidad: Viendo Clases (Botón +, oculta T y Foto)
+                if(btnAddClase) btnAddClase.style.display = 'flex';
+                if(btnTexto) btnTexto.style.display = 'none';
+                if(btnImg) btnImg.style.display = 'none';
+            } else if (nivelActual === 2) {
+                // Universidad o Inglés: Viendo Apuntes (Oculta +, muestra T y Foto)
+                if(btnAddClase) btnAddClase.style.display = 'none';
+                if(btnTexto) btnTexto.style.display = 'flex';
+                if(btnImg) btnImg.style.display = 'flex';
+            }
+        }
     } else {
         const pestanaActual = vistas[vistaActualIndex];
         let listaAsociada = '';
@@ -275,7 +316,12 @@ function verificarContenidoDetalle() {
     if (itemActual && itemActual.startsWith('historial_')) return;
     let contenedor = document.getElementById('contenido-detalle');
     let mensaje = contenedor.querySelector('.vacio-msg');
-    if (contenedor.children.length === 0 && !mensaje) { contenedor.innerHTML = '<div class="vacio-msg fade-in-up">Apuntes vacíos. Usa los botones inferiores.</div>'; } 
+    
+    let textoVacio = nivelActual === 1 ? 'Clases vacías. Usa el botón (+) inferior.' : 'Apuntes vacíos. Usa los botones inferiores.';
+    
+    if (contenedor.children.length === 0 && !mensaje) { 
+        contenedor.innerHTML = `<div class="vacio-msg fade-in-up">${textoVacio}</div>`; 
+    } 
     else if (contenedor.children.length > 1 && mensaje) { mensaje.remove(); }
 }
 
@@ -308,11 +354,24 @@ function renombrarCursoCiclo(nombreActual, pestanaActual) {
     let nuevoNombre = prompt("Editar nombre:", nombreActual);
     if (nuevoNombre && nuevoNombre.trim() !== "" && nuevoNombre !== nombreActual) {
         nuevoNombre = nuevoNombre.trim();
-        let data = localStorage.getItem('contenido_' + nombreActual);
-        if (data) { localStorage.setItem('contenido_' + nuevoNombre, data); localStorage.removeItem('contenido_' + nombreActual); }
-        let listaID = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
+        let isUniversidad = pestanaActual === 'universidad';
+
+        if (isUniversidad) {
+            let data = localStorage.getItem('clases_' + nombreActual);
+            if (data) { localStorage.setItem('clases_' + nuevoNombre, data); localStorage.removeItem('clases_' + nombreActual); }
+        } else {
+            let data = localStorage.getItem('contenido_' + nombreActual);
+            if (data) { localStorage.setItem('contenido_' + nuevoNombre, data); localStorage.removeItem('contenido_' + nombreActual); }
+        }
+
+        let listaID = isUniversidad ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
         let spans = document.getElementById(listaID).querySelectorAll('span.titulo-item');
-        spans.forEach(span => { if (span.innerText === nombreActual) { span.innerText = nuevoNombre; span.setAttribute('onclick', `abrirDetalle('${nuevoNombre}')`); } });
+        spans.forEach(span => { 
+            if (span.innerText === nombreActual) { 
+                span.innerText = nuevoNombre; 
+                span.setAttribute('onclick', isUniversidad ? `abrirClases('${nuevoNombre}')` : `abrirApuntes('${nuevoNombre}', 'ciclo')`); 
+            } 
+        });
         guardarDatos();
     }
 }
@@ -374,7 +433,7 @@ function guardarPendienteDesdeModal() {
         if(fecha && hora) {
             pendienteEditando.setAttribute('data-fecha', fecha);
             pendienteEditando.setAttribute('data-hora', hora);
-            pendienteEditando.setAttribute('data-notificado', 'false'); 
+            programarNotificacionOneSignal(texto, fecha, hora);
         } else {
             pendienteEditando.removeAttribute('data-fecha');
             pendienteEditando.removeAttribute('data-hora');
@@ -388,7 +447,7 @@ function guardarPendienteDesdeModal() {
         if(fecha && hora) {
             li.setAttribute('data-fecha', fecha);
             li.setAttribute('data-hora', hora);
-            li.setAttribute('data-notificado', 'false'); 
+            programarNotificacionOneSignal(texto, fecha, hora);
         }
         
         li.innerHTML = innerContent;
@@ -398,48 +457,89 @@ function guardarPendienteDesdeModal() {
     guardarDatos();
     verificarContenidoPrincipal();
     cerrarModalPendiente();
-    pedirPermisoNotificaciones();
 }
 
-function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemListaBasico('lista-cursos-universidad', n); guardarDatos(); } }
-function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemListaBasico('lista-ciclos-ingles', n); guardarDatos(); } }
+// === CREADORES (NIVEL 1) ===
+function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemListaBasico('lista-cursos-universidad', n, 'curso'); guardarDatos(); } }
+function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemListaBasico('lista-ciclos-ingles', n, 'ciclo'); guardarDatos(); } }
 
-function agregarItemListaBasico(idLista, nombre) {
+function agregarItemListaBasico(idLista, nombre, tipo) {
     let ul = document.getElementById(idLista);
     if(ul.querySelector('.vacio-msg-principal')) ul.innerHTML = ''; 
     let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; 
-    li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span class="titulo-item" onclick="abrirDetalle('${nombre}')" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
+    let func = tipo === 'curso' ? `abrirClases('${nombre}')` : `abrirApuntes('${nombre}', 'ciclo')`;
+    li.innerHTML = `<input type="checkbox" class="casilla-seleccion" onclick="event.stopPropagation()"><span class="titulo-item" onclick="${func}" style="cursor:pointer; flex-grow:1;">${nombre}</span>`;
     ul.appendChild(li); verificarContenidoPrincipal();
 }
 
-function abrirDetalle(nombreItem) {
-    if (vistas[vistaActualIndex] === 'pendientes' || vistas[vistaActualIndex] === 'tarjetas') return; 
-    const pestanaActual = vistas[vistaActualIndex];
-    let listaAsociada = pestanaActual === 'universidad' ? 'lista-cursos-universidad' : 'lista-ciclos-ingles';
-    
-    if (document.getElementById(listaAsociada).classList.contains('modo-editar')) { renombrarCursoCiclo(nombreItem, pestanaActual); return; }
-    if (document.getElementById(listaAsociada).classList.contains('modo-eliminar')) return;
+// === CREADORES (NIVEL 2) ===
+function agregarClase() { 
+    let n = prompt("Nombre de la clase (Ej: Clase 1):"); 
+    if (n) { 
+        let ul = document.getElementById('contenido-detalle');
+        if(ul.querySelector('.vacio-msg')) ul.innerHTML = ''; 
+        let li = document.createElement('div'); li.className = 'item-lista fade-in-up'; // Usamos item-lista para mantener estilo de la lista
+        li.innerHTML = `<input type="checkbox" class="casilla-seleccion-detalle" onclick="event.stopPropagation()"><span class="titulo-item" onclick="abrirApuntes('${n}', 'clase')" style="cursor:pointer; flex-grow:1;">${n}</span>`;
+        ul.appendChild(li); 
+        guardarContenidoDetalle();
+        verificarContenidoDetalle();
+    } 
+}
 
-    itemActual = nombreItem;
-    window.history.pushState({ pantalla: 'detalle' }, "", "#detalle");
+// === CONTROL DE VISTAS Y NIVELES ===
+function abrirClases(nombreCurso) {
+    if (document.getElementById('lista-cursos-universidad').classList.contains('modo-editar')) { renombrarCursoCiclo(nombreCurso, 'universidad'); return; }
+    if (document.getElementById('lista-cursos-universidad').classList.contains('modo-eliminar')) return;
+
+    cursoActual = nombreCurso;
+    nivelActual = 1;
+    window.history.pushState({ pantalla: 'clases' }, "", "#clases");
     
     document.getElementById('pantalla-principal').style.display = 'none';
     document.getElementById('nav-principal').style.display = 'none';
-    document.querySelectorAll('.controles-flotantes, .controles-confirmar').forEach(el => el.style.display = 'none');
-    document.getElementById('flotantes-detalle').style.display = 'flex';
-
+    
     let detalle = document.getElementById('pantalla-detalle');
     detalle.style.display = 'block';
     detalle.classList.remove('slide-out');
     detalle.classList.add('slide-in');
 
-    document.getElementById('titulo-detalle').innerText = nombreItem;
-    document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('contenido_' + itemActual) || "";
+    document.getElementById('titulo-detalle').innerText = nombreCurso;
+    document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('clases_' + cursoActual) || "";
+    
+    actualizarControles();
+    verificarContenidoDetalle();
+}
+
+function abrirApuntes(nombre, tipo) {
+    if (tipo === 'ciclo' && document.getElementById('lista-ciclos-ingles').classList.contains('modo-editar')) { renombrarCursoCiclo(nombre, 'ingles'); return; }
+    if (tipo === 'ciclo' && document.getElementById('lista-ciclos-ingles').classList.contains('modo-eliminar')) return;
+    if (tipo === 'clase' && document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) return;
+
+    nivelActual = 2;
+    if (tipo === 'clase') claseActual = nombre;
+    if (tipo === 'ciclo') cicloActual = nombre;
+    
+    window.history.pushState({ pantalla: 'apuntes' }, "", "#apuntes");
+    
+    document.getElementById('pantalla-principal').style.display = 'none';
+    document.getElementById('nav-principal').style.display = 'none';
+    
+    let detalle = document.getElementById('pantalla-detalle');
+    detalle.style.display = 'block';
+    detalle.classList.remove('slide-out');
+    detalle.classList.add('slide-in');
+
+    document.getElementById('titulo-detalle').innerText = nombre;
+    
+    let key = tipo === 'clase' ? 'contenido_' + claseActual + '_' + cursoActual : 'contenido_' + cicloActual;
+    document.getElementById('contenido-detalle').innerHTML = localStorage.getItem(key) || "";
     
     document.querySelectorAll('#contenido-detalle .bloque-detalle').forEach(bloque => {
         let divContenido = bloque.querySelector('div[style*="width: 100%"]');
         if(divContenido && !divContenido.hasAttribute('onclick')) { divContenido.setAttribute('onclick', 'abrirLectura(this)'); divContenido.style.cursor = 'pointer'; }
     });
+    
+    actualizarControles();
     verificarContenidoDetalle();
 }
 
@@ -472,11 +572,26 @@ window.addEventListener('popstate', function() {
     const detalle = document.getElementById('pantalla-detalle');
     const lectura = document.getElementById('pantalla-lectura');
     
-    if (hash === '#detalle') {
+    if (hash === '#apuntes' || hash === '#detalle') {
         if (lectura.style.display === 'block') {
             lectura.classList.remove('slide-in'); lectura.classList.add('slide-out');
             setTimeout(() => { lectura.style.display = 'none'; detalle.style.display = 'block'; actualizarControles(); }, 290);
         }
+    } else if (hash === '#clases') {
+        if (lectura.style.display === 'block') { lectura.style.display = 'none'; detalle.style.display = 'block'; }
+        
+        nivelActual = 1;
+        document.getElementById('titulo-detalle').innerText = cursoActual;
+        document.getElementById('contenido-detalle').innerHTML = localStorage.getItem('clases_' + cursoActual) || "";
+        
+        if(document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
+            document.getElementById('contenido-detalle').classList.remove('modo-eliminar');
+            document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle').forEach(c => c.checked = false);
+        }
+        
+        actualizarControles();
+        verificarContenidoDetalle();
+        
     } else if (hash === '' || hash === '#') {
         if (lectura.style.display === 'block') lectura.style.display = 'none';
         if(document.getElementById('contenido-detalle').classList.contains('modo-eliminar')) {
@@ -489,7 +604,7 @@ window.addEventListener('popstate', function() {
         setTimeout(() => {
             detalle.style.display = 'none';
             if(currentUser) { nav.style.display = 'flex'; main.style.display = 'block'; main.classList.add('fade-in-up'); setTimeout(() => main.classList.remove('fade-in-up'), 300); }
-            itemActual = ""; actualizarControles(); 
+            nivelActual = 0; itemActual = ""; actualizarControles(); 
         }, 290);
     }
 });
@@ -500,10 +615,24 @@ function guardarDatos() {
     localStorage.setItem('pendientes', document.getElementById('lista-pendientes').innerHTML);
     sincronizarConNube();
 }
+
 function cargarDatos() {
     document.getElementById('lista-cursos-universidad').innerHTML = localStorage.getItem('universidad') || "";
     document.getElementById('lista-ciclos-ingles').innerHTML = localStorage.getItem('ingles') || "";
     document.getElementById('lista-pendientes').innerHTML = localStorage.getItem('pendientes') || "";
+    
+    // Convertir el formato viejo al nuevo
+    document.querySelectorAll('#lista-cursos-universidad span.titulo-item').forEach(span => {
+        if(span.getAttribute('onclick').includes('abrirDetalle')) {
+            let nombre = span.innerText; span.setAttribute('onclick', `abrirClases('${nombre}')`);
+        }
+    });
+    document.querySelectorAll('#lista-ciclos-ingles span.titulo-item').forEach(span => {
+        if(span.getAttribute('onclick').includes('abrirDetalle')) {
+            let nombre = span.innerText; span.setAttribute('onclick', `abrirApuntes('${nombre}', 'ciclo')`);
+        }
+    });
+    
     verificarContenidoPrincipal();
 }
 
@@ -575,7 +704,7 @@ function cancelarModoEliminarDetalle() { document.getElementById('contenido-deta
 function confirmarEliminacionDetalle() {
     let seleccionados = document.getElementById('contenido-detalle').querySelectorAll('.casilla-seleccion-detalle:checked');
     if (seleccionados.length === 0) { cancelarModoEliminarDetalle(); return; }
-    seleccionados.forEach(c => { let bloque = c.closest('.bloque-detalle'); bloque.classList.remove('fade-in-up'); bloque.classList.add('fade-out'); setTimeout(() => bloque.remove(), 290); });
+    seleccionados.forEach(c => { let bloque = c.closest('.bloque-detalle, .item-lista'); bloque.classList.remove('fade-in-up'); bloque.classList.add('fade-out'); setTimeout(() => bloque.remove(), 290); });
     setTimeout(() => { guardarContenidoDetalle(); verificarContenidoDetalle(); cancelarModoEliminarDetalle(); }, 300);
 }
 
@@ -599,9 +728,19 @@ function guardarTextoDeCaja() {
         guardarContenidoDetalle(); cerrarModalTexto(); verificarContenidoDetalle();
     } else { alert("Por favor, ingresa contenido."); }
 }
+
 function guardarContenidoDetalle() { 
-    localStorage.setItem('contenido_' + itemActual, document.getElementById('contenido-detalle').innerHTML); 
-    sincronizarConNube(); 
+    let key = "";
+    if (nivelActual === 1) key = 'clases_' + cursoActual;
+    else if (nivelActual === 2) {
+        if (vistas[vistaActualIndex] === 'universidad') key = 'contenido_' + claseActual + '_' + cursoActual;
+        else key = 'contenido_' + cicloActual;
+    } else if (itemActual && itemActual.startsWith('historial_')) return; 
+    
+    if(key) {
+        localStorage.setItem(key, document.getElementById('contenido-detalle').innerHTML); 
+        sincronizarConNube(); 
+    }
 }
 
 function prepararImagen() { tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; document.getElementById('input-imagen').click(); }

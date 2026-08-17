@@ -19,6 +19,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <!-- MOTOR ONESIGNAL (Agregado aquí) -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
+          notifyButton: { enable: false } // Oculto, pediremos permiso desde tu app.js
+        });
+      });
+    </script>
 </head>
 <body>
 
