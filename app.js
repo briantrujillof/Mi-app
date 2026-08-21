@@ -1,4 +1,4 @@
-// === INYECCIÓN DINÁMICA DE ONESIGNAL (Sin tocar tu HTML) ===
+// === INYECCIÓN DINÁMICA DE ONESIGNAL ===
 const scriptOneSignal = document.createElement('script');
 scriptOneSignal.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
 scriptOneSignal.defer = true;
@@ -10,7 +10,7 @@ OneSignalDeferred.push(async function(OneSignal) {
         appId: "5fbec12b-4fff-48ca-8511-ae640dde6ebe",
         serviceWorkerParam: { scope: "/Mi-app/" },
         serviceWorkerPath: "/Mi-app/OneSignalSDKWorker.js",
-        notifyButton: { enable: false } // Oculto, se pide permiso al loguearse
+        notifyButton: { enable: false }
     });
 });
 
@@ -45,11 +45,10 @@ let touchstartX = 0; let touchstartY = 0; let touchendX = 0; let touchendY = 0;
 const vistas = ['universidad', 'ingles', 'pendientes', 'tarjetas'];
 let vistaActualIndex = 0;
 
-// Variables para control de niveles (Universidad 3, Inglés 2)
 let cursoActual = "";
 let claseActual = "";
 let cicloActual = "";
-let nivelActual = 0; // 0: Principal, 1: Clases(PUCP), 2: Apuntes
+let nivelActual = 0; 
 
 // === INYECCIÓN BOTÓN AÑADIR CLASE ===
 window.addEventListener('DOMContentLoaded', () => {
@@ -68,10 +67,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // === ALARMAS EN LA NUBE CON ONESIGNAL ===
 function programarNotificacionOneSignal(texto, fecha, hora) {
     if (!currentUser) return;
-    
     const ONESIGNAL_REST_API_KEY = "os_v2_app_l67mck2p75emvbirvzsa3xtox3mg7wgljeoekm46xbnb6ftomtzycyjj3yxfqbjmvuyx3oev7alsqwhfkcmo7jzhx5jo7zdewnjr2ia";
-    
-    // Formato UTC requerido por OneSignal
     const sendDate = new Date(`${fecha}T${hora}:00`).toUTCString();
 
     const payload = {
@@ -94,6 +90,7 @@ function programarNotificacionOneSignal(texto, fecha, hora) {
     .catch(err => console.error("Error programando notificación:", err));
 }
 
+// === CARGA INTELIGENTE Y AUTENTICACIÓN ===
 auth.onAuthStateChanged(user => {
     const pantallaCarga = document.getElementById('pantalla-carga');
     const pantallaLogin = document.getElementById('pantalla-login');
@@ -103,17 +100,24 @@ auth.onAuthStateChanged(user => {
     if (user) {
         currentUser = user;
         
-        // Vincular usuario con OneSignal y pedir permiso si no lo tiene
         OneSignalDeferred.push(function(OneSignal) {
             OneSignal.login(user.uid);
             OneSignal.Slidedown.promptPush(); 
         });
 
         db.collection('usuarios').doc(user.uid).get().then(doc => {
-            localStorage.clear(); 
             if (doc.exists && Object.keys(doc.data()).length > 0) {
                 const data = doc.data();
-                Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+                const localSync = parseInt(localStorage.getItem('ultimaSync') || '0');
+                const nubeSync = parseInt(data['ultimaSync'] || '0');
+                
+                // Si la nube es más nueva o igual, descargamos la data. Si el celular es más nuevo, forzamos subida.
+                if (nubeSync >= localSync || localSync === 0) {
+                    localStorage.clear();
+                    Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
+                } else if (localSync > nubeSync) {
+                    sincronizarConNube();
+                }
             } else {
                 sincronizarConNube();
             }
@@ -147,11 +151,17 @@ auth.onAuthStateChanged(user => {
 
 function sincronizarConNube() {
     if (!currentUser) return;
+    
+    // Se crea un sello de tiempo único
+    const timestamp = new Date().getTime().toString();
+    localStorage.setItem('ultimaSync', timestamp);
+    
     const dataObj = {};
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         dataObj[key] = localStorage.getItem(key);
     }
+    
     db.collection('usuarios').doc(currentUser.uid).set(dataObj)
       .catch(e => console.error("Error sincronizando:", e));
 }
@@ -251,18 +261,15 @@ function actualizarControles() {
         } else { 
             document.getElementById('flotantes-detalle').style.display = 'flex'; 
             
-            // Lógica asimétrica de niveles
             const btnAddClase = document.getElementById('btn-add-clase');
             const btnTexto = document.getElementById('flotantes-detalle').children[1];
             const btnImg = document.getElementById('flotantes-detalle').children[2];
             
             if (nivelActual === 1) {
-                // Universidad: Viendo Clases (Botón +, oculta T y Foto)
                 if(btnAddClase) btnAddClase.style.display = 'flex';
                 if(btnTexto) btnTexto.style.display = 'none';
                 if(btnImg) btnImg.style.display = 'none';
             } else if (nivelActual === 2) {
-                // Universidad o Inglés: Viendo Apuntes (Oculta +, muestra T y Foto)
                 if(btnAddClase) btnAddClase.style.display = 'none';
                 if(btnTexto) btnTexto.style.display = 'flex';
                 if(btnImg) btnImg.style.display = 'flex';
@@ -288,7 +295,6 @@ function actualizarControles() {
 function retrocompatibilidadPendientes() {
     document.querySelectorAll('#lista-pendientes .item-lista').forEach(item => {
         if (item.querySelector('.pendiente-info')) return; 
-
         let oldSpan = item.querySelector('span:not(.pend-texto)');
         if (oldSpan && !oldSpan.classList.contains('titulo-item')) {
             let texto = oldSpan.innerText;
@@ -318,9 +324,7 @@ function verificarContenidoDetalle() {
     if (itemActual && itemActual.startsWith('historial_')) return;
     let contenedor = document.getElementById('contenido-detalle');
     let mensaje = contenedor.querySelector('.vacio-msg');
-    
     let textoVacio = nivelActual === 1 ? 'Clases vacías. Usa el botón (+) inferior.' : 'Apuntes vacíos. Usa los botones inferiores.';
-    
     if (contenedor.children.length === 0 && !mensaje) { 
         contenedor.innerHTML = `<div class="vacio-msg fade-in-up">${textoVacio}</div>`; 
     } 
@@ -461,7 +465,6 @@ function guardarPendienteDesdeModal() {
     cerrarModalPendiente();
 }
 
-// === CREADORES (NIVEL 1) ===
 function agregarCurso() { let n = prompt("Nombre del curso:"); if (n) { agregarItemListaBasico('lista-cursos-universidad', n, 'curso'); guardarDatos(); } }
 function agregarCiclo() { let n = prompt("Nombre del ciclo:"); if (n) { agregarItemListaBasico('lista-ciclos-ingles', n, 'ciclo'); guardarDatos(); } }
 
@@ -474,7 +477,6 @@ function agregarItemListaBasico(idLista, nombre, tipo) {
     ul.appendChild(li); verificarContenidoPrincipal();
 }
 
-// === CREADORES (NIVEL 2) ===
 function agregarClase() { 
     let n = prompt("Nombre de la clase (Ej: Clase 1):"); 
     if (n) { 
@@ -488,7 +490,6 @@ function agregarClase() {
     } 
 }
 
-// === CONTROL DE VISTAS Y NIVELES ===
 function abrirClases(nombreCurso) {
     if (document.getElementById('lista-cursos-universidad').classList.contains('modo-editar')) { renombrarCursoCiclo(nombreCurso, 'universidad'); return; }
     if (document.getElementById('lista-cursos-universidad').classList.contains('modo-eliminar')) return;
@@ -679,6 +680,7 @@ function cargarSaldosTarjetas() {
     document.getElementById('saldo-corredor').innerText = parseFloat(localStorage.getItem('saldo_corredor') || 10).toFixed(2);
     document.getElementById('saldo-tren').innerText = parseFloat(localStorage.getItem('saldo_tren') || 5).toFixed(2);
 }
+
 function agregarSaldo(tipo) {
     let m = prompt("Monto a recargar:");
     if(m) {
@@ -691,6 +693,7 @@ function agregarSaldo(tipo) {
         }
     }
 }
+
 function descontarPasaje(tipo, costo) {
     let actual = parseFloat(localStorage.getItem('saldo_'+tipo) || (tipo==='corredor'?10:5));
     if(actual >= costo) {
