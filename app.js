@@ -108,10 +108,10 @@ auth.onAuthStateChanged(user => {
         db.collection('usuarios').doc(user.uid).get().then(doc => {
             if (doc.exists && Object.keys(doc.data()).length > 0) {
                 const data = doc.data();
+                // AQUÍ ESTÁ EL ESCUDO: Compara tiempos antes de borrar nada
                 const localSync = parseInt(localStorage.getItem('ultimaSync') || '0');
                 const nubeSync = parseInt(data['ultimaSync'] || '0');
                 
-                // Si la nube es más nueva o igual, descargamos la data. Si el celular es más nuevo, forzamos subida.
                 if (nubeSync >= localSync || localSync === 0) {
                     localStorage.clear();
                     Object.keys(data).forEach(key => localStorage.setItem(key, data[key]));
@@ -152,7 +152,7 @@ auth.onAuthStateChanged(user => {
 function sincronizarConNube() {
     if (!currentUser) return;
     
-    // Se crea un sello de tiempo único
+    // AQUÍ CREAMOS EL SELLO DE TIEMPO para proteger tu información
     const timestamp = new Date().getTime().toString();
     localStorage.setItem('ultimaSync', timestamp);
     
@@ -747,10 +747,16 @@ function guardarContenidoDetalle() {
     }
 }
 
-function prepararImagen() { tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; document.getElementById('input-imagen').click(); }
+// AQUÍ ESTÁ EL ARREGLO DE LAS IMÁGENES: El prompt solo sale después de elegir archivo
+function prepararImagen() { 
+    document.getElementById('input-imagen').click(); 
+}
+
 function cargarImagen(event) {
     let file = event.target.files[0];
     if(file) {
+        tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; 
+        
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
@@ -763,7 +769,9 @@ function cargarImagen(event) {
     }
     event.target.value = ""; 
 }
+
 function cancelarRecorte() { document.getElementById('modal-recorte').style.display = 'none'; if(cropper) { cropper.destroy(); cropper = null; } }
+
 async function confirmarRecorte() {
     if(cropper) {
         document.getElementById('modal-recorte').style.display = 'none';
@@ -778,6 +786,7 @@ async function confirmarRecorte() {
         guardarContenidoDetalle(); verificarContenidoDetalle(); cropper.destroy(); cropper = null;
     }
 }
+
 async function subirImagenACloudinary(dataUrl) {
     const formData = new FormData();
     formData.append("file", dataUrl); formData.append("upload_preset", UPLOAD_PRESET);
