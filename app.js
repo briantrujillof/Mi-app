@@ -755,13 +755,14 @@ function prepararImagen() {
 function cargarImagen(event) {
     let file = event.target.files[0];
     if(file) {
-        tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte"; 
-        
         let reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('imagen-a-recortar').src = e.target.result;
             const modal = document.getElementById('modal-recorte');
-            modal.style.display = 'flex'; modal.classList.add('solo-fade-in'); setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
+            modal.style.display = 'flex'; 
+            modal.classList.add('solo-fade-in'); 
+            setTimeout(() => modal.classList.remove('solo-fade-in'), 200);
+            
             if(cropper) cropper.destroy();
             cropper = new Cropper(document.getElementById('imagen-a-recortar'), { viewMode: 1 });
         };
@@ -770,20 +771,32 @@ function cargarImagen(event) {
     event.target.value = ""; 
 }
 
-function cancelarRecorte() { document.getElementById('modal-recorte').style.display = 'none'; if(cropper) { cropper.destroy(); cropper = null; } }
+function cancelarRecorte() { 
+    document.getElementById('modal-recorte').style.display = 'none'; 
+    if(cropper) { cropper.destroy(); cropper = null; } 
+}
 
 async function confirmarRecorte() {
     if(cropper) {
+        // Pedimos el título justo antes de guardar, sin apuro
+        tituloImagenPendiente = prompt("Título para este apunte:") || "Apunte";
+        
         document.getElementById('modal-recorte').style.display = 'none';
         let contenedor = document.getElementById('contenido-detalle');
         if(contenedor.querySelector('.vacio-msg')) contenedor.innerHTML = '';
+        
         let canvas = cropper.getCroppedCanvas({ maxWidth: 1000, maxHeight: 1000 });
         let urlImagen = await subirImagenACloudinary(canvas.toDataURL('image/jpeg', 0.7));
 
-        let div = document.createElement('div'); div.className = 'bloque-detalle fade-in-up'; 
+        let div = document.createElement('div'); 
+        div.className = 'bloque-detalle fade-in-up'; 
         div.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;"><input type="checkbox" class="casilla-seleccion-detalle"><div style="width: 100%; cursor: pointer;" onclick="abrirLectura(this)">${tituloImagenPendiente ? `<h4>${tituloImagenPendiente}</h4>` : '<h4 style="display:none;"></h4>'}<img src="${urlImagen}" class="imagen-galeria"></div></div>`;
+        
         contenedor.appendChild(div);
-        guardarContenidoDetalle(); verificarContenidoDetalle(); cropper.destroy(); cropper = null;
+        guardarContenidoDetalle(); 
+        verificarContenidoDetalle(); 
+        cropper.destroy(); 
+        cropper = null;
     }
 }
 
